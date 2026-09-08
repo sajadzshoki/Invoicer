@@ -1,0 +1,264 @@
+/* ==========================================================================
+   نسق — ژتون‌های طراحی (Design Tokens)
+   تنها منبع تعریف رنگ، فاصله، گوشه، تایپوگرافی، سایه و حرکت.
+   هر دو تم روشن و تاریک به‌صورت مستقل و هدفمند طراحی شده‌اند.
+   ========================================================================== */
+
+:root {
+  /* ---------- فاصله‌ها (Spacing) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+
+  /* ---------- گوشه‌ها (Radius) ---------- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 999px;
+
+  /* ---------- تایپوگرافی ---------- */
+  --font-sans: "Vazirmatn", "Segoe UI", Tahoma, "Helvetica Neue", Arial, sans-serif;
+
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-md: 0.875rem;   /* 14px */
+  --text-base: 0.9375rem;/* 15px */
+  --text-lg: 1rem;       /* 16px */
+  --text-xl: 1.125rem;   /* 18px */
+  --text-2xl: 1.375rem;  /* 22px */
+  --text-3xl: 1.75rem;   /* 28px */
+
+  --leading-tight: 1.35;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.8;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+
+  /* ---------- اندازهٔ آیکون‌ها ---------- */
+  --icon-xs: 14px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-xl: 28px;
+
+  /* ---------- حرکت ---------- */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------- چیدمان ---------- */
+  --header-height: 60px;
+  --bottomnav-height: 62px;
+  --sidebar-width: 264px;
+  --content-max: 880px;
+  --sheet-max: 520px;
+  --modal-max: 440px;
+
+  /* ---------- حالت فوکوس ---------- */
+  --ring-width: 2px;
+  --ring-offset: 2px;
+
+  /* ---------- ارتفاع کنترل‌های فرم (لمس‌پذیر) ---------- */
+  --control-height: 48px;
+  --control-height-sm: 40px;
+}
+
+/* ==========================================================================
+   تم روشن
+   ========================================================================== */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* سطح‌ها */
+  --color-bg: #f4f6f5;
+  --color-surface: #ffffff;
+  --color-surface-2: #eff2f1;
+  --color-surface-3: #e4e9e7;
+  --color-raised: #ffffff;
+
+  /* خطوط */
+  --color-border: #e2e7e5;
+  --color-border-strong: #cbd5d1;
+
+  /* متن */
+  --color-text-1: #14201c;
+  --color-text-2: #52645e;
+  --color-text-3: #83948e;
+  --color-text-inverse: #ffffff;
+
+  /* برند */
+  --color-primary: #0e7561;
+  --color-primary-hover: #0c6453;
+  --color-primary-active: #0a5446;
+  --color-primary-soft: #dcefe8;
+  --color-primary-softer: #edf6f2;
+  --color-primary-text: #0a5d4e;
+  --color-on-primary: #ffffff;
+
+  /* معنایی */
+  --color-success: #187a48;
+  --color-success-soft: #e0f2e7;
+  --color-success-text: #136a3e;
+
+  --color-warning: #a36a08;
+  --color-warning-strong: #d97706;
+  --color-warning-soft: #f9efdb;
+  --color-warning-text: #8f5c07;
+
+  --color-error: #cc3a31;
+  --color-error-hover: #b32f27;
+  --color-error-active: #9d2a22;
+  --color-error-soft: #fbe9e7;
+  --color-error-text: #b93227;
+
+  --color-info: #1e6bc4;
+  --color-info-soft: #e4effa;
+  --color-info-text: #1a5daa;
+
+  /* ژتون‌های مالی — فقط تعریف توکن؛ منطق مالی در فازهای بعد */
+  --fin-income: var(--color-success);
+  --fin-income-soft: var(--color-success-soft);
+  --fin-income-text: var(--color-success-text);
+  --fin-expense: var(--color-error);
+  --fin-expense-soft: var(--color-error-soft);
+  --fin-expense-text: var(--color-error-text);
+  --fin-receivable: var(--color-info);
+  --fin-receivable-soft: var(--color-info-soft);
+  --fin-receivable-text: var(--color-info-text);
+  --fin-debt: var(--color-warning);
+  --fin-debt-soft: var(--color-warning-soft);
+  --fin-debt-text: var(--color-warning-text);
+  --fin-paid: var(--color-success);
+  --fin-paid-soft: var(--color-success-soft);
+  --fin-pending: var(--color-warning);
+  --fin-pending-soft: var(--color-warning-soft);
+
+  /* سایه‌ها */
+  --shadow-soft: 0 1px 2px rgba(20, 32, 28, 0.05);
+  --shadow-card: 0 1px 2px rgba(20, 32, 28, 0.04), 0 2px 8px rgba(20, 32, 28, 0.05);
+  --shadow-raised: 0 4px 14px rgba(20, 32, 28, 0.09), 0 1px 3px rgba(20, 32, 28, 0.06);
+  --shadow-pop: 0 12px 32px rgba(20, 32, 28, 0.16), 0 2px 8px rgba(20, 32, 28, 0.08);
+  --shadow-sheet: 0 -12px 40px rgba(20, 32, 28, 0.18);
+  --shadow-focus: 0 0 0 3px var(--color-primary-soft);
+  --shadow-focus-error: 0 0 0 3px var(--color-error-soft);
+
+  /* متفرقه */
+  --backdrop: rgba(20, 32, 28, 0.45);
+  --color-focus: #0e7561;
+  --toast-bg: #1e2925;
+  --toast-text: #f2f6f4;
+  --toast-border: #2c3a34;
+  --skeleton-base: #e8edeb;
+  --skeleton-shine: #f6f8f7;
+  --scrollbar-thumb: #c4cfcb;
+}
+
+/* ==========================================================================
+   تم تاریک — طراحی مستقل (نه معکوسِ تم روشن)
+   ========================================================================== */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* سطح‌ها */
+  --color-bg: #0d1311;
+  --color-surface: #141b18;
+  --color-surface-2: #1b2420;
+  --color-surface-3: #232e29;
+  --color-raised: #1b2420;
+
+  /* خطوط */
+  --color-border: #24302b;
+  --color-border-strong: #36453e;
+
+  /* متن */
+  --color-text-1: #e8efec;
+  --color-text-2: #9db0a9;
+  --color-text-3: #6c7f77;
+  --color-text-inverse: #0d1311;
+
+  /* برند — در تم تاریک، دکمهٔ اصلی سبز روشن با متن تیره است */
+  --color-primary: #2ebb96;
+  --color-primary-hover: #40cba8;
+  --color-primary-active: #29a987;
+  --color-primary-soft: #123329;
+  --color-primary-softer: #0f271f;
+  --color-primary-text: #5fd3b3;
+  --color-on-primary: #06261d;
+
+  /* معنایی */
+  --color-success: #3ec381;
+  --color-success-soft: #11301f;
+  --color-success-text: #6cd89f;
+
+  --color-warning: #e0a94e;
+  --color-warning-strong: #e0a94e;
+  --color-warning-soft: #332812;
+  --color-warning-text: #eabf77;
+
+  --color-error: #ef6f66;
+  --color-error-hover: #f3857d;
+  --color-error-active: #e25d54;
+  --color-error-soft: #3a1a17;
+  --color-error-text: #f4938c;
+
+  --color-info: #5fa7ec;
+  --color-info-soft: #112639;
+  --color-info-text: #88bdf2;
+
+  /* ژتون‌های مالی */
+  --fin-income: var(--color-success);
+  --fin-income-soft: var(--color-success-soft);
+  --fin-income-text: var(--color-success-text);
+  --fin-expense: var(--color-error);
+  --fin-expense-soft: var(--color-error-soft);
+  --fin-expense-text: var(--color-error-text);
+  --fin-receivable: var(--color-info);
+  --fin-receivable-soft: var(--color-info-soft);
+  --fin-receivable-text: var(--color-info-text);
+  --fin-debt: var(--color-warning);
+  --fin-debt-soft: var(--color-warning-soft);
+  --fin-debt-text: var(--color-warning-text);
+  --fin-paid: var(--color-success);
+  --fin-paid-soft: var(--color-success-soft);
+  --fin-pending: var(--color-warning);
+  --fin-pending-soft: var(--color-warning-soft);
+
+  /* سایه‌ها — در تم تاریک سایه‌ها ملایم‌ترند و خطوط نقش اصلی را دارند */
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-raised: 0 4px 14px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-sheet: 0 -12px 40px rgba(0, 0, 0, 0.5);
+  --shadow-focus: 0 0 0 3px rgba(46, 187, 150, 0.22);
+  --shadow-focus-error: 0 0 0 3px rgba(239, 111, 102, 0.22);
+
+  /* متفرقه */
+  --backdrop: rgba(4, 8, 7, 0.62);
+  --color-focus: #52c7a8;
+  --toast-bg: #2a3833;
+  --toast-text: #eef4f1;
+  --toast-border: #3a4b44;
+  --skeleton-base: #1b2420;
+  --skeleton-shine: #232e29;
+  --scrollbar-thumb: #2e3b35;
+}
