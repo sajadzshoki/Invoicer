@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   FilePlus2,
@@ -45,6 +46,7 @@ const QUICK_ACTIONS: Array<{ id: string; label: string; icon: ReactNode }> = [
 ];
 
 export function HomePage() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [loadingActivity, setLoadingActivity] = useState(true);
 
@@ -60,6 +62,14 @@ export function HomePage() {
       description: "این قابلیت در فازهای بعدی نسق اضافه خواهد شد.",
       variant: "info",
     });
+
+  const runQuickAction = (id: string, label: string) => {
+    if (id === "party") {
+      navigate("/bookAccount/add-customer");
+      return;
+    }
+    comingSoon(label);
+  };
 
   return (
     <>
@@ -164,7 +174,7 @@ export function HomePage() {
                 key={action.id}
                 type="button"
                 className="qa"
-                onClick={() => comingSoon(action.label)}
+                onClick={() => runQuickAction(action.id, action.label)}
               >
                 <span className="qa__icon" aria-hidden>
                   {action.icon}
