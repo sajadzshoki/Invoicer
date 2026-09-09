@@ -4,6 +4,8 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { BookProvider } from "@/book/store";
 import { InventoryProvider } from "@/inventory/store";
 import { InvoiceProvider } from "@/invoices/store";
+import { ChequeProvider } from "@/cheques/store";
+import { CostProvider } from "@/costs/store";
 import { AppShell } from "@/app/AppShell";
 import { HomePage } from "@/pages/HomePage";
 import { PartiesPage } from "@/pages/PartiesPage";
@@ -12,7 +14,12 @@ import { PartyDetailPage } from "@/pages/PartyDetailPage";
 import { InvoicesPage } from "@/pages/InvoicesPage";
 import { InvoiceFormPage } from "@/pages/InvoiceFormPage";
 import { InvoiceDetailPage } from "@/pages/InvoiceDetailPage";
-import { ChequeAddPage } from "@/pages/ChequeAddPage";
+import { ChequeListPage } from "@/cheques/ChequeListPage";
+import { ChequeFormPage } from "@/cheques/ChequeFormPage";
+import { ChequeDetailPage } from "@/cheques/ChequeDetailPage";
+import { CostsPage } from "@/costs/CostsPage";
+import { CostFormPage } from "@/costs/CostFormPage";
+import { CostDetailPage } from "@/costs/CostDetailPage";
 import { ProductsPage } from "@/pages/ProductsPage";
 import { ProductFormPage } from "@/pages/ProductFormPage";
 import { ProductDetailPage } from "@/pages/ProductDetailPage";
@@ -27,6 +34,8 @@ export default function App() {
         <BookProvider>
           <InventoryProvider>
             <InvoiceProvider>
+              <ChequeProvider>
+                <CostProvider>
               <BrowserRouter>
                 <Routes>
                   <Route element={<AppShell />}>
@@ -49,8 +58,17 @@ export default function App() {
                     <Route path="invoices/invoice/list" element={<InvoicesPage />} />
                     <Route path="invoices/add" element={<InvoiceFormPage />} />
                     <Route path="invoices/invoice/:id" element={<InvoiceDetailPage />} />
-                    {/* نقطهٔ اتصال چک — فرم چک در فاز بعد */}
-                    <Route path="cheque/add/:invoiceId" element={<ChequeAddPage />} />
+
+                    {/* ماژول چک‌ها (فاز ۵) */}
+                    <Route path="cheque/list" element={<ChequeListPage />} />
+                    <Route path="cheque/add" element={<ChequeFormPage />} />
+                    <Route path="cheque/add/:invoiceId" element={<ChequeFormPage />} />
+                    <Route path="cheque/:id" element={<ChequeDetailPage />} />
+
+                    {/* ماژول هزینه‌ها و درآمدها (فاز ۵) */}
+                    <Route path="costs" element={<CostsPage />} />
+                    <Route path="costs/add" element={<CostFormPage />} />
+                    <Route path="costs/:id" element={<CostDetailPage />} />
 
                     <Route path="more" element={<MorePage />} />
                     <Route path="design-system" element={<DesignSystemPage />} />
@@ -58,6 +76,8 @@ export default function App() {
                   </Route>
                 </Routes>
               </BrowserRouter>
+                </CostProvider>
+              </ChequeProvider>
             </InvoiceProvider>
           </InventoryProvider>
         </BookProvider>

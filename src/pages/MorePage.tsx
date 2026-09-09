@@ -11,7 +11,7 @@ import {
   Settings,
   Sun,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/app/PageHeader";
 import { Avatar } from "@/components/ui/Card";
 import { IconButton, Button } from "@/components/ui/Button";
@@ -25,30 +25,35 @@ const MODULES = [
   {
     id: "cheques",
     title: "چک‌ها",
-    caption: "ثبت و پیگیری چک‌های دریافتی و پرداختی",
+    caption: "ثبت و پیگیری چک‌های دریافتی، پرداختی و خرج چک",
     icon: <FileSignature size={20} aria-hidden />,
+    path: "/cheque/list",
   },
   {
     id: "cashflow",
     title: "هزینه‌ها و درآمدها",
-    caption: "ثبت تراکنش‌های روزانهٔ کسب‌وکار",
+    caption: "ثبت هزینه‌ها و درآمدهای عمومی کسب‌وکار",
     icon: <Repeat size={20} aria-hidden />,
+    path: "/costs",
   },
   {
     id: "reports",
     title: "گزارش‌ها",
     caption: "نمودارها و خلاصهٔ عملکرد مالی",
     icon: <BarChart3 size={20} aria-hidden />,
+    path: null,
   },
   {
     id: "settings",
     title: "تنظیمات",
     caption: "کسب‌وکار، واحد پول و ترجیحات",
     icon: <Settings size={20} aria-hidden />,
+    path: null,
   },
 ];
 
 export function MorePage() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const { theme, toggleTheme } = useTheme();
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -91,7 +96,9 @@ export function MorePage() {
                   title={mod.title}
                   caption={mod.caption}
                   chevron
-                  onClick={() => comingSoon(mod.title)}
+                  onClick={() =>
+                    mod.path ? navigate(mod.path) : comingSoon(mod.title)
+                  }
                 />
               ))}
             </div>
@@ -132,7 +139,7 @@ export function MorePage() {
                 icon={<Info size={20} aria-hidden />}
                 tintIcon
                 title="دربارهٔ نسق"
-                caption="نسخهٔ ۰٫۱ — فاز ۱"
+                caption="نسخهٔ ۰٫۵ — فاز ۵"
                 chevron
                 onClick={() => setAboutOpen(true)}
               />
@@ -162,10 +169,10 @@ export function MorePage() {
         }
       >
         <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-2)", lineHeight: "var(--leading-relaxed)" }}>
-          شما در حال استفاده از فاز ۴ نسق هستید؛ فونداسیون، سیستم طراحی، دفتر
-          حساب طرف حساب‌ها، کالاها و خدمات و فاکتورهای فروش/خرید/پیش‌فاکتور.
-          بخش‌های چک، هزینه و درآمد، گزارش و اتصال به بک‌اند در فازهای بعدی
-          اضافه می‌شوند.
+          شما در حال استفاده از فاز ۵ نسق هستید؛ فونداسیون، سیستم طراحی، دفتر
+          حساب طرف حساب‌ها، کالاها و خدمات، فاکتورهای فروش/خرید/پیش‌فاکتور،
+          ماژول چک‌ها (دریافتی، پرداختی و خرج چک) و ماژول هزینه‌ها و درآمدها.
+          بخش‌های گزارش و اتصال به بک‌اند در فازهای بعدی اضافه می‌شوند.
         </p>
       </Modal>
     </>

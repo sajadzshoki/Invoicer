@@ -185,6 +185,43 @@ export const SEED_TRANSACTIONS: BookAccountTransaction[] = [
     invoiceId: "inv-1004",
     createdAt: nowIso(),
   },
+
+  /* ---------- رکوردهای متصل به چک‌های نمونه (فاز ۵) ----------
+     چک فاکتور فروش با تسویهٔ چکی — ثبت چک، اثر مالی فاکتور را فعال می‌کند */
+  {
+    id: "t-ch-1",
+    personId: "p-1",
+    type: "SALE_INVOICE",
+    amount: 3_240_000,
+    date: daysAgoIso(3),
+    description: "بابت چک فاکتور فروش INV-1007",
+    invoiceId: "inv-1007",
+    chequeId: "ch-1",
+    createdAt: nowIso(),
+  },
+  // چک فاکتور خرید با تسویهٔ چکی — چک پرداختی هنوز وصول نشده
+  {
+    id: "t-ch-2",
+    personId: "p-2",
+    type: "PURCHASE_INVOICE",
+    amount: 1_300_000,
+    date: daysAgoIso(4),
+    description: "بابت چک فاکتور خرید INV-1008",
+    invoiceId: "inv-1008",
+    chequeId: "ch-2",
+    createdAt: nowIso(),
+  },
+  // چک پرداختی مستقل که وصول شده — پرداخت قطعی به تأمین‌کننده
+  {
+    id: "t-ch-6",
+    personId: "p-2",
+    type: "PAID",
+    amount: 800_000,
+    date: daysAgoIso(2),
+    description: "وصول چک پرداختی به شرکت پخش آریا",
+    chequeId: "ch-6",
+    createdAt: nowIso(),
+  },
 ];
 
 export const SEED_NOTES: PartyNote[] = [

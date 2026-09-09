@@ -80,6 +80,8 @@ export interface TransactionInput {
   description?: string;
   /** اتصال به فاکتور — برای ردیابی و بازگشت اثر مالی فاکتورها */
   invoiceId?: string;
+  /** اتصال به چک — برای ردیابی و بازگشت اثر مالی چک‌ها */
+  chequeId?: string;
 }
 
 interface BookStoreValue extends BookData {
@@ -92,6 +94,10 @@ interface BookStoreValue extends BookData {
    * ماندهٔ شخص به‌طور خودکار از روی رکوردهای باقی‌مانده بازخوانی می‌شود.
    */
   removeTransactionsForInvoice: (invoiceId: string) => void;
+  /**
+   * حذف همهٔ رکوردهای متصل به یک چک (برای تغییر وضعیت/ویرایش/حذف چک).
+   */
+  removeTransactionsForCheque: (chequeId: string) => void;
   addNote: (personId: string, text: string) => PartyNote;
   updateNote: (noteId: string, text: string) => void;
   deleteNote: (noteId: string) => void;
@@ -168,6 +174,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
         date: input.date,
         description: input.description?.trim() || undefined,
         invoiceId: input.invoiceId,
+        chequeId: input.chequeId,
         createdAt: new Date().toISOString(),
       };
       setData((d) => ({ ...d, transactions: [tx, ...d.transactions] }));
@@ -180,6 +187,13 @@ export function BookProvider({ children }: { children: ReactNode }) {
     setData((d) => ({
       ...d,
       transactions: d.transactions.filter((t) => t.invoiceId !== invoiceId),
+    }));
+  }, []);
+
+  const removeTransactionsForCheque = useCallback((chequeId: string) => {
+    setData((d) => ({
+      ...d,
+      transactions: d.transactions.filter((t) => t.chequeId !== chequeId),
     }));
   }, []);
 
@@ -246,6 +260,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
       deleteParty,
       addTransaction,
       removeTransactionsForInvoice,
+      removeTransactionsForCheque,
       addNote,
       updateNote,
       deleteNote,
@@ -260,6 +275,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
       deleteParty,
       addTransaction,
       removeTransactionsForInvoice,
+      removeTransactionsForCheque,
       addNote,
       updateNote,
       deleteNote,

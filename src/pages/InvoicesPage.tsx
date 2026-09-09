@@ -20,6 +20,7 @@ import { EmptyState, Skeleton } from "@/components/ui/Feedback";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { DateSelectSheet } from "@/components/party/DateSelectSheet";
 import { useInvoiceStore } from "@/invoices/store";
+import { useChequeStore } from "@/cheques/store";
 import { useBookStore } from "@/book/store";
 import type {
   Invoice,
@@ -98,7 +99,14 @@ const EMPTY_COPY: Record<TypeFilter, { title: string; description: string }> = {
 export function InvoicesPage() {
   const navigate = useNavigate();
   const { invoices } = useInvoiceStore();
+  const chequeStore = useChequeStore();
   const { persons } = useBookStore();
+
+  /* ماندهٔ آگاه از چک: برای فاکتورهای چکی، مبالغ وصول‌شدهٔ چک‌ها کسر می‌شود */
+  const outstandingFor = (inv: Invoice): number =>
+    inv.paymentType === "CHEQUE"
+      ? Math.max(0, inv.totalAmount - chequeStore.settledByCheques(inv.id))
+      : outstandingAmount(inv);
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -132,14 +140,15 @@ export function InvoicesPage() {
       if (inv.type === "BUY" && inv.date >= monthStart && inv.date <= today) {
         purchases += inv.totalAmount;
       }
-      const out = outstandingAmount(inv);
+      const out = outstandingFor(inv);
       if (out > 0) {
         unsettledCount += 1;
         unsettledSum += out;
       }
     }
     return { sales, purchases, unsettledCount, unsettledSum };
-  }, [invoices]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices, chequeStore]);
 
   /* ------------------------------ فیلتر و جستجو ------------------------------ */
 
@@ -501,8 +510,19 @@ function InvoiceCard({
   partyName: string;
   onClick: () => void;
 }) {
-  const meta = STATUS_META[invoice.status];
-  const outstanding = outstandingAmount(invoice);
+  const chequeStore = useChequeStore();
+  const outstanding =
+    invoice.paymentType === "CHEQUE"
+      ? Math.max(0, invoice.totalAmount - chequeStore.settledByCheques(invoice.id))
+      : outstandingAmount(invoice);
+  /* فاکتور چکی که کاملاً با چک‌های وصول‌شده تسویه شده، «پرداخت‌شده» نمایش داده می‌شود */
+  const effectiveStatus: InvoiceStatus =
+    invoice.paymentType === "CHEQUE" &&
+    invoice.status === "CHEQUE_PENDING" &&
+    outstanding === 0
+      ? "PAID"
+      : invoice.status;
+  const meta = STATUS_META[effectiveStatus];
 
   return (
     <button type="button" className="inv-card" onClick={onClick}>
@@ -524,10 +544,18 @@ function InvoiceCard({
 
       <div className="inv-card__badges">
         <StatusBadge tone={meta.tone} icon={meta.icon}>
-          {INVOICE_STATUS_LABEL[invoice.status]}
+          {effectiveStatus === "PAID" && invoice.status === "CHEQUE_PENDING"
+            ? "تسویه با چک"
+            : INVOICE_STATUS_LABEL[effectiveStatus]}
           {invoice.status === "PARTIAL" && outstanding > 0 && (
             <> · مانده {faTomanCompact(outstanding)}</>
           )}
+          {invoice.paymentType === "CHEQUE" &&
+            invoice.status === "CHEQUE_PENDING" &&
+            outstanding > 0 &&
+            invoice.totalAmount - outstanding > 0 && (
+              <> · مانده {faTomanCompact(outstanding)}</>
+            )}
         </StatusBadge>
         <Badge tone="outline">{PAYMENT_TYPE_LABEL[invoice.paymentType]}</Badge>
         {invoice.shippingStatus && (

@@ -19,6 +19,7 @@ import { Alert, ErrorState, Skeleton } from "@/components/ui/Feedback";
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { useToast } from "@/components/ui/Toast";
 import { useInvoiceStore } from "@/invoices/store";
+import { useChequeStore } from "@/cheques/store";
 import { useBookStore } from "@/book/store";
 import {
   buildShareText,
@@ -39,10 +40,14 @@ export function InvoiceDetailPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const invoiceStore = useInvoiceStore();
+  const chequeStore = useChequeStore();
   const { persons } = useBookStore();
 
   const invoice = id ? invoiceStore.getInvoice(id) : undefined;
   const party = persons.find((p) => p.id === invoice?.personId);
+  const invoiceCheques = invoice
+    ? chequeStore.invoiceCheques(invoice.id)
+    : [];
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -95,7 +100,14 @@ export function InvoiceDetailPage() {
     );
   }
 
-  const outstanding = outstandingAmount(invoice);
+  /* ماندهٔ آگاه از چک: برای فاکتورهای چکی، مبالغ وصول‌شدهٔ چک‌ها کسر می‌شود */
+  const chequeSettled = chequeStore.settledByCheques(invoice.id);
+  const outstanding =
+    invoice.paymentType === "CHEQUE"
+      ? Math.max(0, invoice.totalAmount - chequeSettled)
+      : outstandingAmount(invoice);
+  const chequeFullySettled =
+    invoice.paymentType === "CHEQUE" && invoice.status === "CHEQUE_PENDING" && outstanding === 0;
 
   const doPrint = () => {
     setMenuOpen(false);
@@ -196,9 +208,19 @@ export function InvoiceDetailPage() {
         )}
         {invoice.paymentType === "CHEQUE" && invoice.type !== "DRAFT" && (
           <Alert
-            variant="warning"
-            title="در انتظار تسویهٔ چک"
-            description="اثر مالی این فاکتور پس از ثبت و تعیین وضعیت چک اعمال می‌شود."
+            variant={chequeFullySettled ? "success" : "warning"}
+            title={
+              chequeFullySettled
+                ? "تسویهٔ این فاکتور با چک کامل شد"
+                : invoiceCheques.length > 0
+                  ? "در انتظار وصول چک‌ها"
+                  : "در انتظار تسویهٔ چک"
+            }
+            description={
+              invoiceCheques.length > 0
+                ? `${faNum(invoiceCheques.length)} چک برای این فاکتور ثبت شده است. فقط چک‌های «وصول شده» در تسویه محاسبه می‌شوند.`
+                : "اثر مالی این فاکتور پس از ثبت و تعیین وضعیت چک اعمال می‌شود."
+            }
             className="mb-4"
           />
         )}
@@ -234,18 +256,22 @@ export function InvoiceDetailPage() {
               <div className="inv-doc__status">
                 <StatusBadge
                   tone={
-                    invoice.status === "PAID"
+                    chequeFullySettled
                       ? "success"
-                      : invoice.status === "UNPAID"
-                        ? "error"
-                        : invoice.status === "PARTIAL"
-                          ? "info"
-                          : invoice.status === "CHEQUE_PENDING"
-                            ? "warning"
-                            : "neutral"
+                      : invoice.status === "PAID"
+                        ? "success"
+                        : invoice.status === "UNPAID"
+                          ? "error"
+                          : invoice.status === "PARTIAL"
+                            ? "info"
+                            : invoice.status === "CHEQUE_PENDING"
+                              ? "warning"
+                              : "neutral"
                   }
                 >
-                  {INVOICE_STATUS_LABEL[invoice.status]}
+                  {chequeFullySettled
+                    ? "تسویه با چک"
+                    : INVOICE_STATUS_LABEL[invoice.status]}
                 </StatusBadge>
               </div>
             </div>
@@ -336,7 +362,12 @@ export function InvoiceDetailPage() {
                       </>
                     )}
                     {invoice.paymentType === "CASH" && " — پرداخت کامل"}
-                    {invoice.paymentType === "CHEQUE" && " — در انتظار ثبت چک"}
+                    {invoice.paymentType === "CHEQUE" &&
+                      (chequeFullySettled
+                        ? " — تسویهٔ کامل با چک"
+                        : invoiceCheques.length > 0
+                          ? ` — تسویه‌شده با چک: ${faToman(chequeSettled)} · باقی‌مانده: ${faToman(outstanding)}`
+                          : " — در انتظار ثبت چک")}
                   </p>
                 </div>
               )}

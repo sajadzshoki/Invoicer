@@ -1,78 +1,108 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ArrowDownLeft,
+  ArrowUpRight,
   Bell,
   FilePlus2,
+  FileSignature,
   HandCoins,
   Inbox,
+  PiggyBank,
   Receipt,
   TrendingDown,
   TrendingUp,
-  UserPlus,
   Wallet,
 } from "lucide-react";
 import { PageHeader } from "@/app/PageHeader";
-import { Avatar } from "@/components/ui/Card";
+import { Avatar, ListItem } from "@/components/ui/Card";
 import { IconButton, Button } from "@/components/ui/Button";
 import { EmptyState, SkeletonListItem } from "@/components/ui/Feedback";
 import { useToast } from "@/components/ui/Toast";
+import { useBookStore } from "@/book/store";
+import { computePartySummary } from "@/book/finance";
+import { useChequeStore } from "@/cheques/store";
+import { computeChequeSummary } from "@/cheques/helpers";
+import { useCostStore } from "@/costs/store";
 import {
   faGreeting,
   faNum,
+  faTomanCompact,
   faTodayFull,
 } from "@/lib/fa";
+import { isoToJalali, todayIso, todayJalali } from "@/lib/jalali";
 
 const USER = { name: "مریم", initials: "م‌ر" };
 
-/* داده‌های نمونهٔ فاز ۱ — صرفاً برای نمایش ظاهر داشبورد */
-const SAMPLE = {
-  balance: 124_580_000,
-  delta: "+۱۲٪ نسبت به ماه قبل",
-  income: 86.4,
-  incomeCaption: "۱۲٪ بیشتر از ماه قبل",
-  expense: 32.2,
-  expenseCaption: "۴٪ کمتر از ماه قبل",
-  receivable: 18.7,
-  receivableCaption: "از ۳ مشتری",
-  debt: 9.2,
-  debtCaption: "به ۲ تأمین‌کننده",
-};
-
 const QUICK_ACTIONS: Array<{ id: string; label: string; icon: ReactNode }> = [
   { id: "invoice", label: "ثبت فاکتور", icon: <FilePlus2 size={22} aria-hidden /> },
-  { id: "party", label: "افزودن طرف حساب", icon: <UserPlus size={22} aria-hidden /> },
+  { id: "cheque", label: "ثبت چک", icon: <FileSignature size={22} aria-hidden /> },
   { id: "expense", label: "ثبت هزینه", icon: <Receipt size={22} aria-hidden /> },
-  { id: "receive", label: "ثبت دریافت", icon: <HandCoins size={22} aria-hidden /> },
+  { id: "income", label: "ثبت درآمد", icon: <PiggyBank size={22} aria-hidden /> },
 ];
 
 export function HomePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { persons, transactions } = useBookStore();
+  const chequeStore = useChequeStore();
+  const { costs } = useCostStore();
   const [loadingActivity, setLoadingActivity] = useState(true);
 
-  // شبیه‌سازی بارگذاری اولیهٔ «آخرین تراکنش‌ها» — نمایش اسکلت
+  // شبیه‌سازی بارگذاری اولیه — نمایش اسکلت
   useEffect(() => {
-    const t = window.setTimeout(() => setLoadingActivity(false), 1600);
+    const t = window.setTimeout(() => setLoadingActivity(false), 900);
     return () => window.clearTimeout(t);
   }, []);
 
-  const comingSoon = (label: string) =>
-    showToast({
-      title: `«${label}» به‌زودی فعال می‌شود`,
-      description: "این قابلیت در فازهای بعدی نسق اضافه خواهد شد.",
-      variant: "info",
-    });
+  /* مانده‌ها و طلب/بدهی — مشتق‌شده از رکوردهای دفتر حساب (بدون ذخیرهٔ تکراری) */
+  const finance = useMemo(() => {
+    let receivable = 0;
+    let payable = 0;
+    for (const person of persons) {
+      const summary = computePartySummary(
+        transactions.filter((t) => t.personId === person.id)
+      );
+      receivable += summary.receivable;
+      payable += summary.payable;
+    }
+    return { receivable, payable, net: receivable - payable };
+  }, [persons, transactions]);
 
-  const runQuickAction = (id: string, label: string) => {
-    if (id === "party") {
-      navigate("/bookAccount/add-customer");
-      return;
+  /* درآمد و هزینهٔ ماه جاری — از ماژول هزینه‌ها و درآمدها */
+  const monthMoney = useMemo(() => {
+    const today = todayJalali();
+    let income = 0;
+    let expense = 0;
+    for (const cost of costs) {
+      const j = isoToJalali(cost.date);
+      if (!j || j.jy !== today.jy || j.jm !== today.jm) continue;
+      if (cost.type === "INCOME") income += cost.amount;
+      else expense += cost.amount;
     }
-    if (id === "invoice") {
-      navigate("/invoices/add");
-      return;
-    }
-    comingSoon(label);
+    return { income, expense };
+  }, [costs]);
+
+  /* چک‌های در انتظار با سررسید نزدیک */
+  const chequeSoon = useMemo(
+    () => computeChequeSummary(chequeStore.cheques, todayIso()),
+    [chequeStore.cheques]
+  );
+
+  /* آخرین رکوردهای هزینه/درآمد برای بخش «آخرین تراکنش‌ها» */
+  const recentCosts = useMemo(
+    () =>
+      [...costs]
+        .sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time))
+        .slice(0, 5),
+    [costs]
+  );
+
+  const runQuickAction = (id: string) => {
+    if (id === "invoice") navigate("/invoices/add");
+    else if (id === "cheque") navigate("/cheque/add");
+    else if (id === "expense") navigate("/costs/add?type=EXPENSE");
+    else if (id === "income") navigate("/costs/add?type=INCOME");
   };
 
   return (
@@ -121,15 +151,20 @@ export function HomePage() {
                 وضعیت مالی کلی
               </span>
             </div>
-            <p className="balance-card__amount">
-              {faNum(SAMPLE.balance)}
-              <span className="amount-unit">تومان</span>
-            </p>
+            <p className="balance-card__amount">{faTomanCompact(finance.net)}</p>
             <span className="balance-card__delta">
-              <TrendingUp size={14} aria-hidden />
-              {SAMPLE.delta}
+              {finance.net >= 0 ? (
+                <>
+                  <TrendingUp size={14} aria-hidden />
+                  جمع طلب‌ها منهای بدهی‌ها
+                </>
+              ) : (
+                <>
+                  <TrendingDown size={14} aria-hidden />
+                  بدهی‌ها بیشتر از طلب‌هاست
+                </>
+              )}
             </span>
-            <Sparkline />
           </div>
         </section>
 
@@ -140,31 +175,68 @@ export function HomePage() {
               tone="income"
               icon={<TrendingUp size={18} aria-hidden />}
               label="درآمد این ماه"
-              value={SAMPLE.income}
-              caption={SAMPLE.incomeCaption}
+              value={faTomanCompact(monthMoney.income)}
+              caption="از ماژول هزینه‌ها و درآمدها"
             />
             <StatCard
               tone="expense"
               icon={<TrendingDown size={18} aria-hidden />}
               label="هزینه این ماه"
-              value={SAMPLE.expense}
-              caption={SAMPLE.expenseCaption}
+              value={faTomanCompact(monthMoney.expense)}
+              caption="از ماژول هزینه‌ها و درآمدها"
             />
             <StatCard
               tone="receivable"
               icon={<HandCoins size={18} aria-hidden />}
               label="طلب از مشتریان"
-              value={SAMPLE.receivable}
-              caption={SAMPLE.receivableCaption}
+              value={faTomanCompact(finance.receivable)}
+              caption="مانده‌های بدهکار دفتر حساب"
             />
             <StatCard
               tone="debt"
               icon={<Receipt size={18} aria-hidden />}
               label="بدهی به دیگران"
-              value={SAMPLE.debt}
-              caption={SAMPLE.debtCaption}
+              value={faTomanCompact(finance.payable)}
+              caption="مانده‌های بستانکار دفتر حساب"
             />
           </div>
+        </section>
+
+        {/* چک‌های با سررسید نزدیک */}
+        <section className="page__section" aria-label="چک‌های پیش رو">
+          <div className="section-head">
+            <h2>چک‌های پیش رو</h2>
+            <Button variant="text" size="sm" onClick={() => navigate("/cheque/list")}>
+              مشاهدهٔ همه
+            </Button>
+          </div>
+          {chequeSoon.dueSoonCount === 0 ? (
+            <div className="card" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
+              <EmptyState
+                compact
+                icon={<FileSignature size={28} aria-hidden />}
+                title="چکی با سررسید نزدیک نیست"
+                description="چک‌های در انتظار وصول که سررسیدشان نزدیک باشد اینجا نمایش داده می‌شوند."
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="home-cheque-banner"
+              onClick={() => navigate("/cheque/list")}
+            >
+              <span className="home-cheque-banner__icon" aria-hidden>
+                <FileSignature size={20} />
+              </span>
+              <span className="home-cheque-banner__body">
+                <strong>
+                  {faNum(chequeSoon.dueSoonCount)} چک با سررسید تا هفتهٔ دیگر
+                </strong>
+                <span>مجموع {faTomanCompact(chequeSoon.dueSoonAmount)}</span>
+              </span>
+              <span className="home-cheque-banner__hint">مشاهده</span>
+            </button>
+          )}
         </section>
 
         {/* اقدامات سریع */}
@@ -178,7 +250,7 @@ export function HomePage() {
                 key={action.id}
                 type="button"
                 className="qa"
-                onClick={() => runQuickAction(action.id, action.label)}
+                onClick={() => runQuickAction(action.id)}
               >
                 <span className="qa__icon" aria-hidden>
                   {action.icon}
@@ -189,10 +261,13 @@ export function HomePage() {
           </div>
         </section>
 
-        {/* آخرین تراکنش‌ها — اسکلت و سپس وضعیت خالی */}
+        {/* آخرین رکوردهای هزینه/درآمد */}
         <section className="page__section" aria-label="آخرین تراکنش‌ها">
           <div className="section-head">
             <h2>آخرین تراکنش‌ها</h2>
+            <Button variant="text" size="sm" onClick={() => navigate("/costs")}>
+              مشاهدهٔ همه
+            </Button>
           </div>
           <div className="card" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
             {loadingActivity ? (
@@ -201,18 +276,47 @@ export function HomePage() {
                 <SkeletonListItem />
                 <SkeletonListItem />
               </div>
-            ) : (
+            ) : recentCosts.length === 0 ? (
               <EmptyState
                 compact
                 icon={<Inbox size={30} aria-hidden />}
-                title="هنوز تراکنشی وجود ندارد"
-                description="اولین درآمد یا هزینهٔ خود را ثبت کنید تا اینجا نمایش داده شود."
+                title="هنوز رکوردی وجود ندارد"
+                description="اولین هزینه یا درآمد خود را ثبت کنید تا اینجا نمایش داده شود."
                 actions={
-                  <Button variant="secondary" onClick={() => comingSoon("ثبت تراکنش")}>
-                    ثبت اولین تراکنش
+                  <Button variant="secondary" onClick={() => navigate("/costs/add")}>
+                    ثبت اولین رکورد
                   </Button>
                 }
               />
+            ) : (
+              <div className="list">
+                {recentCosts.map((cost) => {
+                  const isIncome = cost.type === "INCOME";
+                  return (
+                    <ListItem
+                      key={cost.id}
+                      tintIcon
+                      icon={
+                        isIncome ? (
+                          <ArrowUpRight size={18} aria-hidden />
+                        ) : (
+                          <ArrowDownLeft size={18} aria-hidden />
+                        )
+                      }
+                      title={cost.title}
+                      caption={isIncome ? "درآمد" : "هزینه"}
+                      end={
+                        <strong className={isIncome ? "fin-income-text" : "fin-expense-text"}>
+                          {isIncome ? "+" : "−"}
+                          {faTomanCompact(cost.amount)}
+                        </strong>
+                      }
+                      chevron
+                      onClick={() => navigate(`/costs/${cost.id}`)}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
         </section>
@@ -232,7 +336,7 @@ function StatCard({
   tone: "income" | "expense" | "receivable" | "debt";
   icon: ReactNode;
   label: string;
-  value: number;
+  value: string;
   caption: string;
 }) {
   return (
@@ -243,29 +347,8 @@ function StatCard({
         </span>
         <span className="stat-card__label">{label}</span>
       </div>
-      <p className="stat-card__value">
-        {faNum(value, { decimals: 1 })}{" "}
-        <span className="amount-unit">میلیون تومان</span>
-      </p>
+      <p className="stat-card__value">{value}</p>
       <span className="stat-card__caption">{caption}</span>
-    </div>
-  );
-}
-
-/* نمودار کوچک روند — دادهٔ نمونهٔ ثابت */
-function Sparkline() {
-  return (
-    <div className="balance-card__spark" dir="ltr" aria-hidden>
-      <svg width="100%" height="44" viewBox="0 0 320 44" preserveAspectRatio="none">
-        <path
-          d="M0 36 C 28 34, 42 28, 66 29 S 110 36, 134 31 S 178 16, 202 18 S 246 24, 270 16 S 306 8, 320 6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        <circle cx="320" cy="6" r="3.5" fill="currentColor" />
-      </svg>
     </div>
   );
 }
