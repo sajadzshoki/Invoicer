@@ -6,6 +6,7 @@ import "./styles/base.css";
 import "./styles/components.css";
 import "./styles/app.css";
 import "./styles/book.css";
+import "./styles/inventory.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
