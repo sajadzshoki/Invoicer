@@ -78,6 +78,8 @@ export interface TransactionInput {
   amount: number;
   date: string;
   description?: string;
+  /** اتصال به فاکتور — برای ردیابی و بازگشت اثر مالی فاکتورها */
+  invoiceId?: string;
 }
 
 interface BookStoreValue extends BookData {
@@ -85,6 +87,11 @@ interface BookStoreValue extends BookData {
   updateParty: (id: string, input: AddPartyInput) => Person | null;
   deleteParty: (id: string) => void;
   addTransaction: (input: TransactionInput) => BookAccountTransaction;
+  /**
+   * حذف همهٔ رکوردهای متصل به یک فاکتور (برای ویرایش/حذف فاکتور).
+   * ماندهٔ شخص به‌طور خودکار از روی رکوردهای باقی‌مانده بازخوانی می‌شود.
+   */
+  removeTransactionsForInvoice: (invoiceId: string) => void;
   addNote: (personId: string, text: string) => PartyNote;
   updateNote: (noteId: string, text: string) => void;
   deleteNote: (noteId: string) => void;
@@ -160,6 +167,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
         amount: input.amount,
         date: input.date,
         description: input.description?.trim() || undefined,
+        invoiceId: input.invoiceId,
         createdAt: new Date().toISOString(),
       };
       setData((d) => ({ ...d, transactions: [tx, ...d.transactions] }));
@@ -167,6 +175,13 @@ export function BookProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+  const removeTransactionsForInvoice = useCallback((invoiceId: string) => {
+    setData((d) => ({
+      ...d,
+      transactions: d.transactions.filter((t) => t.invoiceId !== invoiceId),
+    }));
+  }, []);
 
   const addNote = useCallback((personId: string, text: string): PartyNote => {
     const note: PartyNote = {
@@ -230,6 +245,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
       updateParty,
       deleteParty,
       addTransaction,
+      removeTransactionsForInvoice,
       addNote,
       updateNote,
       deleteNote,
@@ -243,6 +259,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
       updateParty,
       deleteParty,
       addTransaction,
+      removeTransactionsForInvoice,
       addNote,
       updateNote,
       deleteNote,

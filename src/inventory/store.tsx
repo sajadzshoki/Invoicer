@@ -82,6 +82,8 @@ export interface MovementInput {
   date: string;
   description?: string;
   source?: StockMovement["source"];
+  /** برای حرکات متصل به فاکتور (فاز ۴) */
+  invoiceId?: string;
 }
 
 interface InventoryStoreValue extends InventoryData {
@@ -90,6 +92,13 @@ interface InventoryStoreValue extends InventoryData {
   deleteProduct: (id: string) => void;
   /** ثبت حرکت انبار و به‌روزرسانی موجودی — فقط موجودی، بدون اثر مالی */
   applyMovement: (input: MovementInput) => StockMovement | null;
+  /**
+   * حذف همهٔ حرکات متصل به یک فاکتور و بازگشت اثر آن‌ها بر موجودی
+   * (برای ویرایش/حذف فاکتور — جلوگیری از اثر مضاعف).
+   */
+  removeMovementsForInvoice: (invoiceId: string) => void;
+  /** مجموع مقداری که یک فاکتور از کالایی خارج کرده — برای محاسبهٔ موجودی در دسترس هنگام ویرایش فاکتور فروش */
+  soldByInvoice: (invoiceId: string, productId: string) => number;
   addCategory: (name: string) => { ok: boolean; error?: string };
   renameCategory: (id: string, name: string) => { ok: boolean; error?: string };
   /** حذف دسته فقط اگر هیچ قلمی از آن استفاده نکند */
@@ -217,6 +226,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
           date: input.date,
           description: input.description?.trim() || undefined,
           source: input.source ?? "MANUAL",
+          invoiceId: input.invoiceId,
           createdAt: new Date().toISOString(),
         };
         const delta = input.type === "ENTRY" ? input.quantity : -input.quantity;
@@ -237,6 +247,51 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       return created;
     },
     []
+  );
+
+  const removeMovementsForInvoice = useCallback((invoiceId: string) => {
+    setData((d) => {
+      const linked = d.movements.filter((m) => m.invoiceId === invoiceId);
+      if (linked.length === 0) return d;
+      // بازگشت اثر هر حرکت بر موجودی
+      const deltaByProduct = new Map<string, number>();
+      for (const m of linked) {
+        const delta = m.type === "ENTRY" ? -m.quantity : m.quantity;
+        deltaByProduct.set(
+          m.productId,
+          (deltaByProduct.get(m.productId) ?? 0) + delta
+        );
+      }
+      return {
+        ...d,
+        movements: d.movements.filter((m) => m.invoiceId !== invoiceId),
+        products: d.products.map((p) =>
+          deltaByProduct.has(p.id)
+            ? {
+                ...p,
+                currentStock: Math.max(
+                  0,
+                  (p.currentStock ?? 0) + (deltaByProduct.get(p.id) ?? 0)
+                ),
+                updatedAt: new Date().toISOString(),
+              }
+            : p
+        ),
+      };
+    });
+  }, []);
+
+  const soldByInvoice = useCallback(
+    (invoiceId: string, productId: string): number =>
+      data.movements
+        .filter(
+          (m) =>
+            m.invoiceId === invoiceId &&
+            m.productId === productId &&
+            m.type === "EXIT"
+        )
+        .reduce((sum, m) => sum + m.quantity, 0),
+    [data.movements]
   );
 
   const addCategory = useCallback(
@@ -339,6 +394,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       updateProduct,
       deleteProduct,
       applyMovement,
+      removeMovementsForInvoice,
+      soldByInvoice,
       addCategory,
       renameCategory,
       deleteCategory,
@@ -352,6 +409,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       updateProduct,
       deleteProduct,
       applyMovement,
+      removeMovementsForInvoice,
+      soldByInvoice,
       addCategory,
       renameCategory,
       deleteCategory,

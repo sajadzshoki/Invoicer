@@ -126,6 +126,9 @@ export function PartyFormPage() {
       birthDate,
     };
 
+    // مسیر بازگشت اختیاری — مثلاً ادامهٔ جریان صدور فاکتور (فاز ۴)
+    const returnTo = searchParams.get("returnTo");
+
     // شبیه‌سازی کوتاهِ ذخیره‌سازی
     window.setTimeout(() => {
       if (isEdit && editingParty) {
@@ -143,7 +146,17 @@ export function PartyFormPage() {
           title: "طرف حساب اضافه شد",
           description: `«${name.trim()}» به فهرست طرف حساب‌ها اضافه شد.`,
         });
-        navigate(`/bookAccount/${person.id}`);
+        if (returnTo) {
+          // ادامهٔ جریان قبلی: انتخاب خودکار طرف حساب تازه‌ساخته
+          try {
+            sessionStorage.setItem("nasagh:pendingPartyId", person.id);
+          } catch {
+            /* حافظهٔ جلسه در دسترس نبود */
+          }
+          navigate(returnTo);
+        } else {
+          navigate(`/bookAccount/${person.id}`);
+        }
       }
     }, 600);
   };

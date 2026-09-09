@@ -68,6 +68,10 @@ export function HomePage() {
       navigate("/bookAccount/add-customer");
       return;
     }
+    if (id === "invoice") {
+      navigate("/invoices/add");
+      return;
+    }
     comingSoon(label);
   };
 

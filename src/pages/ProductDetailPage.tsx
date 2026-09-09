@@ -437,6 +437,7 @@ function MovementRow({ movement }: { movement: StockMovement }) {
         <span className="t-item__title">
           {isEntry ? "ورود کالا" : "خروج کالا"}
           {movement.source === "INITIAL" && " · موجودی اولیه"}
+          {movement.source === "INVOICE" && " · با فاکتور"}
         </span>
         {movement.description && (
           <span className="t-item__desc">{movement.description}</span>

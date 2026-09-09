@@ -39,8 +39,14 @@ export type MovementType = "ENTRY" | "EXIT";
 
 /**
  * حرکت انبار — فقط موجودی کالا را تغییر می‌دهد.
- * `source` برای فاز ۵ آماده است: «ورود خودکار با فاکتور خرید» یا
- * «خروج خودکار با فاکتور فروش» بعداً به‌جای ثبت دستی می‌نشیند.
+ *
+ * منابع حرکت:
+ * - INITIAL: موجودی اولیه هنگام ساخت کالا
+ * - MANUAL: ورود/خروج دستی (هیچ اثر مالی ندارد)
+ * - INVOICE: متصل به فاکتور فروش (خروج) یا فاکتور خرید (ورود) — فاز ۴
+ *
+ * نکتهٔ مهم: حرکات دستی ورود/خروج همچنان از فاکتور جدا هستند و
+ * هیچ اثر مالی ندارند؛ فقط حرکات با منبع INVOICE به فاکتور متصل‌اند.
  */
 export interface StockMovement {
   id: string;
@@ -52,6 +58,8 @@ export interface StockMovement {
   date: string;
   description?: string;
   source: "INITIAL" | "MANUAL" | "INVOICE";
+  /** شناسهٔ فاکتور سازنده — برای ردیابی و بازگشت اثر فاکتور */
+  invoiceId?: string;
   createdAt: string;
 }
 

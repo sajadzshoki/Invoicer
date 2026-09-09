@@ -43,6 +43,12 @@ export const SEED_PERSONS: Person[] = [
     address: "کرج، بلوار طالقانی، نبش خیابان بهار",
     createdAt: daysAgoIso(6),
   },
+  {
+    // مشتری بدون نام مشخص — انتخاب پیش‌فرض هنگام صدور فاکتور فروش
+    id: "p-gen",
+    name: "مشتری عمومی",
+    createdAt: daysAgoIso(60),
+  },
 ];
 
 export const SEED_TRANSACTIONS: BookAccountTransaction[] = [
@@ -132,6 +138,51 @@ export const SEED_TRANSACTIONS: BookAccountTransaction[] = [
     amount: 2_000_000,
     date: daysAgoIso(2),
     description: "قرض‌الحسنه",
+    createdAt: nowIso(),
+  },
+
+  /* ---------- رکوردهای متصل به فاکتورهای نمونه (فاز ۴) ---------- */
+  // فاکتور فروش INV-1002 — نسیه، مانده کامل به‌عنوان طلب
+  {
+    id: "t-inv-1002",
+    personId: "p-4",
+    type: "SALE_INVOICE",
+    amount: 6_060_000,
+    date: daysAgoIso(5),
+    description: "بابت فاکتور فروش INV-1002",
+    invoiceId: "inv-1002",
+    createdAt: nowIso(),
+  },
+  // فاکتور فروش INV-1003 — اقساطی: ثبت کامل فروش + پیش‌پرداخت
+  {
+    id: "t-inv-1003a",
+    personId: "p-1",
+    type: "SALE_INVOICE",
+    amount: 10_000_000,
+    date: daysAgoIso(2),
+    description: "بابت فاکتور فروش INV-1003",
+    invoiceId: "inv-1003",
+    createdAt: nowIso(),
+  },
+  {
+    id: "t-inv-1003b",
+    personId: "p-1",
+    type: "RECEIVED",
+    amount: 4_000_000,
+    date: daysAgoIso(2),
+    description: "پیش‌پرداخت فاکتور INV-1003",
+    invoiceId: "inv-1003",
+    createdAt: nowIso(),
+  },
+  // فاکتور خرید INV-1004 — نسیه، مانده کامل به‌عنوان بدهی ما
+  {
+    id: "t-inv-1004",
+    personId: "p-2",
+    type: "PURCHASE_INVOICE",
+    amount: 6_890_000,
+    date: daysAgoIso(9),
+    description: "بابت فاکتور خرید INV-1004",
+    invoiceId: "inv-1004",
     createdAt: nowIso(),
   },
 ];

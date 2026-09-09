@@ -35,6 +35,12 @@ export interface BookAccountTransaction {
   /** تاریخ به‌صورت ISO میلادی */
   date: string;
   description?: string;
+  /**
+   * شناسهٔ فاکتور سازندهٔ این رکورد (فاز ۴).
+   * رکوردهای متصل به فاکتور با این شناسه قابل ردیابی/بازگشت هستند تا
+   * هنگام ویرایش یا حذف فاکتور، اثر مالی دو بار اعمال نشود.
+   */
+  invoiceId?: string;
   createdAt: string;
 }
 
