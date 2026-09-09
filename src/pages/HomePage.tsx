@@ -10,6 +10,7 @@ import {
   Inbox,
   PiggyBank,
   Receipt,
+  ShoppingCart,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -19,18 +20,19 @@ import { Avatar, ListItem } from "@/components/ui/Card";
 import { IconButton, Button } from "@/components/ui/Button";
 import { EmptyState, SkeletonListItem } from "@/components/ui/Feedback";
 import { useToast } from "@/components/ui/Toast";
-import { useBookStore } from "@/book/store";
-import { computePartySummary } from "@/book/finance";
 import { useChequeStore } from "@/cheques/store";
 import { computeChequeSummary } from "@/cheques/helpers";
 import { useCostStore } from "@/costs/store";
+import { useReportData } from "@/reports/selectors/dataSource";
+import { getDashboardSummary } from "@/reports/selectors/summary";
+import { resolveReportRange } from "@/reports/dateRange/range";
 import {
   faGreeting,
   faNum,
   faTomanCompact,
   faTodayFull,
 } from "@/lib/fa";
-import { isoToJalali, todayIso, todayJalali } from "@/lib/jalali";
+import { todayIso } from "@/lib/jalali";
 
 const USER = { name: "مریم", initials: "م‌ر" };
 
@@ -44,9 +46,9 @@ const QUICK_ACTIONS: Array<{ id: string; label: string; icon: ReactNode }> = [
 export function HomePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { persons, transactions } = useBookStore();
-  const chequeStore = useChequeStore();
   const { costs } = useCostStore();
+  const chequeStore = useChequeStore();
+  const reportData = useReportData();
   const [loadingActivity, setLoadingActivity] = useState(true);
 
   // شبیه‌سازی بارگذاری اولیه — نمایش اسکلت
@@ -55,33 +57,11 @@ export function HomePage() {
     return () => window.clearTimeout(t);
   }, []);
 
-  /* مانده‌ها و طلب/بدهی — مشتق‌شده از رکوردهای دفتر حساب (بدون ذخیرهٔ تکراری) */
-  const finance = useMemo(() => {
-    let receivable = 0;
-    let payable = 0;
-    for (const person of persons) {
-      const summary = computePartySummary(
-        transactions.filter((t) => t.personId === person.id)
-      );
-      receivable += summary.receivable;
-      payable += summary.payable;
-    }
-    return { receivable, payable, net: receivable - payable };
-  }, [persons, transactions]);
-
-  /* درآمد و هزینهٔ ماه جاری — از ماژول هزینه‌ها و درآمدها */
-  const monthMoney = useMemo(() => {
-    const today = todayJalali();
-    let income = 0;
-    let expense = 0;
-    for (const cost of costs) {
-      const j = isoToJalali(cost.date);
-      if (!j || j.jy !== today.jy || j.jm !== today.jm) continue;
-      if (cost.type === "INCOME") income += cost.amount;
-      else expense += cost.amount;
-    }
-    return { income, expense };
-  }, [costs]);
+  /* خلاصهٔ ماه جاری — از سلکتور مشترک گزارش‌ها (بدون منطق تکراری) */
+  const monthSummary = useMemo(
+    () => getDashboardSummary(reportData, resolveReportRange("month")),
+    [reportData]
+  );
 
   /* چک‌های در انتظار با سررسید نزدیک */
   const chequeSoon = useMemo(
@@ -151,9 +131,11 @@ export function HomePage() {
                 وضعیت مالی کلی
               </span>
             </div>
-            <p className="balance-card__amount">{faTomanCompact(finance.net)}</p>
+            <p className="balance-card__amount">
+              {faTomanCompact(monthSummary.receivables - monthSummary.payables)}
+            </p>
             <span className="balance-card__delta">
-              {finance.net >= 0 ? (
+              {monthSummary.receivables - monthSummary.payables >= 0 ? (
                 <>
                   <TrendingUp size={14} aria-hidden />
                   جمع طلب‌ها منهای بدهی‌ها
@@ -168,36 +150,56 @@ export function HomePage() {
           </div>
         </section>
 
-        {/* خلاصهٔ درآمد، هزینه، طلب و بدهی */}
+        {/* خلاصهٔ ماه — کلیک روی هر کارت به گزارش مربوطه می‌رود */}
         <section className="page__section" aria-label="خلاصه مالی">
           <div className="stat-grid">
+            <StatCard
+              tone="sales"
+              icon={<ShoppingCart size={18} aria-hidden />}
+              label="فروش این ماه"
+              value={faTomanCompact(monthSummary.sales)}
+              caption="فاکتورهای فروش قطعی"
+              onClick={() => navigate("/reports/sales")}
+            />
             <StatCard
               tone="income"
               icon={<TrendingUp size={18} aria-hidden />}
               label="درآمد این ماه"
-              value={faTomanCompact(monthMoney.income)}
+              value={faTomanCompact(monthSummary.income)}
               caption="از ماژول هزینه‌ها و درآمدها"
+              onClick={() => navigate("/reports/income-expense")}
             />
             <StatCard
               tone="expense"
               icon={<TrendingDown size={18} aria-hidden />}
               label="هزینه این ماه"
-              value={faTomanCompact(monthMoney.expense)}
+              value={faTomanCompact(monthSummary.expense)}
               caption="از ماژول هزینه‌ها و درآمدها"
+              onClick={() => navigate("/reports/income-expense")}
             />
             <StatCard
               tone="receivable"
               icon={<HandCoins size={18} aria-hidden />}
               label="طلب از مشتریان"
-              value={faTomanCompact(finance.receivable)}
-              caption="مانده‌های بدهکار دفتر حساب"
+              value={faTomanCompact(monthSummary.receivables)}
+              caption="ماندهٔ لحظه‌ای دفتر حساب"
+              onClick={() => navigate("/reports/receivables")}
             />
             <StatCard
               tone="debt"
               icon={<Receipt size={18} aria-hidden />}
               label="بدهی به دیگران"
-              value={faTomanCompact(finance.payable)}
-              caption="مانده‌های بستانکار دفتر حساب"
+              value={faTomanCompact(monthSummary.payables)}
+              caption="ماندهٔ لحظه‌ای دفتر حساب"
+              onClick={() => navigate("/reports/receivables")}
+            />
+            <StatCard
+              tone="cheque"
+              icon={<FileSignature size={18} aria-hidden />}
+              label="چک‌های نزدیک سررسید"
+              value={`${faNum(monthSummary.upcomingChequeCount)} چک`}
+              caption={faTomanCompact(monthSummary.upcomingChequeAmount)}
+              onClick={() => navigate("/reports/cheques")}
             />
           </div>
         </section>
@@ -325,22 +327,29 @@ export function HomePage() {
   );
 }
 
-/* کارت آمار کوچک */
+/* کارت آمار کوچک — با کلیک به گزارش مربوطه می‌رود */
 function StatCard({
   tone,
   icon,
   label,
   value,
   caption,
+  onClick,
 }: {
-  tone: "income" | "expense" | "receivable" | "debt";
+  tone: "income" | "expense" | "receivable" | "debt" | "sales" | "cheque";
   icon: ReactNode;
   label: string;
   value: string;
   caption: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="stat-card">
+    <button
+      type="button"
+      className={`stat-card${onClick ? " stat-card--link" : ""}`}
+      onClick={onClick}
+      aria-label={onClick ? `${label}: ${value} — رفتن به گزارش` : undefined}
+    >
       <div className="stat-card__head">
         <span className={`stat-card__chip stat-card__chip--${tone}`} aria-hidden>
           {icon}
@@ -349,6 +358,6 @@ function StatCard({
       </div>
       <p className="stat-card__value">{value}</p>
       <span className="stat-card__caption">{caption}</span>
-    </div>
+    </button>
   );
 }

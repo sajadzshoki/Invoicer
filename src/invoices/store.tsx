@@ -293,13 +293,14 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
 
         /* ---------- ۶) اثر مالی بر دفتر حساب طرف حساب ---------- */
         // مانده‌ای که این فاکتور ایجاد می‌کند:
-        // نقدی → صفر | نسیه → کل مبلغ | اقساط → باقی‌مانده | چک → تا فاز چک‌ها صفر
+        // نقدی → صفر | نسیه و اقساط → کل مبلغ | چک → از مسیر چک‌ها اعمال می‌شود
+        // نکته: در اقساط، پیش‌پرداخت به‌صورت جداگانه «دریافت» ثبت می‌شود؛
+        // پس فاکتور با مبلغ کامل ثبت می‌گردد تا پیش‌پرداخت دو بار کم نشود
+        // (مانده = مبلغ کامل فاکتور − پیش‌پرداخت = باقی‌مانده).
         const outstanding =
-          paymentType === "CREDIT"
+          paymentType === "CREDIT" || paymentType === "INSTALLMENT"
             ? invoice.totalAmount
-            : paymentType === "INSTALLMENT"
-              ? Math.max(0, invoice.totalAmount - paidAmount)
-              : 0;
+            : 0;
 
         if (outstanding > 0) {
           book.addTransaction({

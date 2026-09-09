@@ -10,6 +10,7 @@ import "./styles/inventory.css";
 import "./styles/invoices.css";
 import "./styles/cheques.css";
 import "./styles/costs.css";
+import "./styles/reports.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

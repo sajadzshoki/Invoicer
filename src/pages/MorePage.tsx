@@ -1,19 +1,27 @@
 import { useState } from "react";
 import {
+  ArrowLeftRight,
   BarChart3,
+  Boxes,
   ChevronLeft,
   FileSignature,
+  HandCoins,
   HelpCircle,
   Info,
   Moon,
   Pencil,
+  PiggyBank,
+  ReceiptText,
   Repeat,
+  Scale,
   Settings,
+  ShoppingCart,
   Sun,
+  TrendingUp,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/app/PageHeader";
-import { Avatar } from "@/components/ui/Card";
+import { Avatar, DividerLabel } from "@/components/ui/Card";
 import { IconButton, Button } from "@/components/ui/Button";
 import { ListItem } from "@/components/ui/Card";
 import { Switch } from "@/components/ui/Choice";
@@ -41,7 +49,7 @@ const MODULES = [
     title: "گزارش‌ها",
     caption: "نمودارها و خلاصهٔ عملکرد مالی",
     icon: <BarChart3 size={20} aria-hidden />,
-    path: null,
+    path: "/reports",
   },
   {
     id: "settings",
@@ -51,6 +59,24 @@ const MODULES = [
     path: null,
   },
 ];
+
+const REPORT_LINKS = {
+  financial: [
+    { title: "فروش", path: "/reports/sales", icon: <ShoppingCart size={18} aria-hidden /> },
+    { title: "خرید", path: "/reports/purchases", icon: <ArrowLeftRight size={18} aria-hidden /> },
+    { title: "سود و زیان", path: "/reports/profit-loss", icon: <Scale size={18} aria-hidden /> },
+    { title: "درآمد و هزینه", path: "/reports/income-expense", icon: <PiggyBank size={18} aria-hidden /> },
+    { title: "طلب و بدهی", path: "/reports/receivables", icon: <HandCoins size={18} aria-hidden /> },
+  ],
+  inventory: [
+    { title: "موجودی", path: "/reports/inventory", icon: <Boxes size={18} aria-hidden /> },
+    { title: "گردش کالا", path: "/reports/inventory/movements", icon: <ReceiptText size={18} aria-hidden /> },
+    { title: "عملکرد کالاها", path: "/reports/products", icon: <TrendingUp size={18} aria-hidden /> },
+  ],
+  cheque: [
+    { title: "گزارش چک‌ها", path: "/reports/cheques", icon: <FileSignature size={18} aria-hidden /> },
+  ],
+};
 
 export function MorePage() {
   const navigate = useNavigate();
@@ -84,7 +110,7 @@ export function MorePage() {
           </div>
         </section>
 
-        {/* ماژول‌های آینده */}
+        {/* ماژول‌ها */}
         <section className="page__section" aria-label="بخش‌های بیشتر">
           <div className="more-group">
             <div className="list">
@@ -99,6 +125,51 @@ export function MorePage() {
                   onClick={() =>
                     mod.path ? navigate(mod.path) : comingSoon(mod.title)
                   }
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* گزارش‌ها — دسترسی مستقیم به گزارش‌های پرمراجعه */}
+        <section className="page__section" aria-label="گزارش‌ها">
+          <div className="section-head">
+            <h2>گزارش‌ها</h2>
+          </div>
+          <div className="more-group">
+            <DividerLabel>مالی</DividerLabel>
+            <div className="list">
+              {REPORT_LINKS.financial.map((item) => (
+                <ListItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  chevron
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </div>
+            <DividerLabel>انبار</DividerLabel>
+            <div className="list">
+              {REPORT_LINKS.inventory.map((item) => (
+                <ListItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  chevron
+                  onClick={() => navigate(item.path)}
+                />
+              ))}
+            </div>
+            <DividerLabel>چک</DividerLabel>
+            <div className="list">
+              {REPORT_LINKS.cheque.map((item) => (
+                <ListItem
+                  key={item.path}
+                  icon={item.icon}
+                  title={item.title}
+                  chevron
+                  onClick={() => navigate(item.path)}
                 />
               ))}
             </div>

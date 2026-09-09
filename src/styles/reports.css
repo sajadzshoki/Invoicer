@@ -1,0 +1,716 @@
+/* ============================================================================
+   ماژول گزارش‌ها — فاز ۶
+   انتخابگر بازه، کارت‌های شاخص، نمودارها، جدول‌های واکنش‌گرا و حالت چاپ
+============================================================================ */
+
+/* ------------------------------ پالت نمودارها ------------------------------ */
+
+:root {
+  --chart-1: #0e7561;
+  --chart-2: #1e6bc4;
+  --chart-3: #d97706;
+  --chart-4: #cc3a31;
+  --chart-5: #7c5cd6;
+  --chart-6: #64748b;
+}
+
+[data-theme="dark"] {
+  --chart-1: #2ebb96;
+  --chart-2: #6ea8f0;
+  --chart-3: #e0a94e;
+  --chart-4: #ef6f66;
+  --chart-5: #a78bfa;
+  --chart-6: #94a3b8;
+}
+
+/* ------------------------------ انتخابگر بازه ------------------------------ */
+
+.range-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.range-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.range-picker__chip:hover {
+  border-color: var(--color-border-strong);
+}
+
+.range-picker__chip:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.range-picker__chip.is-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+  font-weight: 700;
+}
+
+.range-custom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.range-custom__hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.range-custom__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* ------------------------------ کارت‌های شاخص ------------------------------ */
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (min-width: 720px) {
+  .metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.metric-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  padding-inline-start: calc(var(--space-4) + 4px);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-align: right;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.metric-card--static {
+  cursor: default;
+}
+
+.metric-card:not(.metric-card--static):hover {
+  box-shadow: var(--shadow-card);
+}
+
+.metric-card:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.metric-card__bar {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.metric-card__bar--primary { background: var(--color-primary); }
+.metric-card__bar--income { background: var(--fin-income); }
+.metric-card__bar--expense { background: var(--fin-expense); }
+.metric-card__bar--receivable { background: var(--fin-receivable); }
+.metric-card__bar--debt { background: var(--fin-debt); }
+.metric-card__bar--neutral { background: var(--color-border-strong); }
+
+.metric-card__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+
+.metric-card__value {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--color-text-1);
+}
+
+.metric-card__caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+/* ------------------------------ کارت‌های KPI گزارش‌ها ------------------------------ */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (min-width: 720px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-align: right;
+}
+
+button.kpi-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+button.kpi-card:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.kpi-card:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.kpi-card__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+
+.kpi-card__value {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--color-text-1);
+  overflow-wrap: anywhere;
+}
+
+.kpi-card__caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.kpi-card--lead .kpi-card__value {
+  color: var(--color-primary-text);
+}
+
+.kpi-card--income .kpi-card__value { color: var(--fin-income-text); }
+.kpi-card--expense .kpi-card__value { color: var(--fin-expense-text); }
+.kpi-card--receivable .kpi-card__value { color: var(--fin-receivable-text); }
+.kpi-card--debt .kpi-card__value { color: var(--fin-debt-text); }
+
+/* ------------------------------ قاب نمودار ------------------------------ */
+
+.chart-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 960px) {
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .chart-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.chart-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.chart-card__head {
+  margin-bottom: var(--space-3);
+}
+
+.chart-card__title {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--color-text-1);
+}
+
+.chart-card__caption {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.chart-skeleton {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* ------------------------------ نمودار ستونی ------------------------------ */
+
+.column-chart__axis {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+
+.column-chart__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.column-chart__tick {
+  fill: var(--color-text-3);
+  font-size: 9px;
+}
+
+.column-chart__label {
+  fill: var(--color-text-3);
+  font-size: 9px;
+}
+
+.column-chart__bar:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+/* راهنمای نمودار */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+
+.chart-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+/* ------------------------------ فهرست میله‌ای ------------------------------ */
+
+.bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.bar-list__row {
+  display: grid;
+  grid-template-columns: minmax(72px, 1.2fr) 2fr minmax(84px, auto);
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bar-list__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-list__track {
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-3);
+  overflow: hidden;
+}
+
+.bar-list__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.bar-list__value {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-1);
+  text-align: left;
+  direction: ltr;
+}
+
+/* ------------------------------ دونات ------------------------------ */
+
+.donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.donut__figure {
+  flex-shrink: 0;
+}
+
+.donut__track {
+  stroke: var(--color-surface-3);
+}
+
+.donut__center-label {
+  fill: var(--color-text-3);
+  font-size: 10px;
+}
+
+.donut__center-value {
+  fill: var(--color-text-1);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.donut__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.donut__legend-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.donut__legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+}
+
+.donut__legend-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.donut__legend-value {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-1);
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.donut__legend-percent {
+  color: var(--color-text-3);
+  font-weight: 400;
+}
+
+/* ------------------------------ چیپ‌های فیلتر ------------------------------ */
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.filter-chip {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.filter-chip:hover {
+  border-color: var(--color-border-strong);
+}
+
+.filter-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.filter-chip.is-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+  font-weight: 700;
+}
+
+.filter-chip--clear {
+  border-style: dashed;
+  color: var(--color-error-text);
+}
+
+/* ------------------------------ جدول گزارش ------------------------------ */
+
+.rt-wrap {
+  overflow-x: auto;
+}
+
+.rt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.rt th {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-3);
+  text-align: right;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.rt td {
+  padding: var(--space-3);
+  color: var(--color-text-1);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.rt tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rt__end {
+  text-align: left;
+}
+
+.rt__center {
+  text-align: center;
+}
+
+.rt-row--interactive {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.rt-row--interactive:hover {
+  background: var(--color-surface-2);
+}
+
+.rt-row--interactive:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-focus);
+}
+
+.rt__hint {
+  color: var(--color-text-3);
+  font-size: var(--text-xs);
+}
+
+.rt__hint--danger {
+  color: var(--color-error-text);
+  font-weight: 700;
+}
+
+.rt__name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.rt-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ردیف‌های اسکلت جدول */
+.rt-skeleton-row {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rt-skeleton-row:last-child {
+  border-bottom: none;
+}
+
+/* ------------------------------ جدول → کارت در موبایل ------------------------------ */
+
+@media (max-width: 720px) {
+  .rt thead {
+    display: none;
+  }
+  .rt,
+  .rt tbody,
+  .rt tr,
+  .rt td {
+    display: block;
+    width: 100%;
+  }
+  .rt tr {
+    margin: var(--space-3);
+    padding: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+  .rt tbody tr:first-child {
+    margin-top: var(--space-3);
+  }
+  .rt td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-1);
+    border-bottom: 1px dashed var(--color-border);
+    text-align: right;
+  }
+  .rt td:last-child {
+    border-bottom: none;
+  }
+  .rt td::before {
+    content: attr(data-label);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--color-text-3);
+    flex-shrink: 0;
+  }
+  .rt__end {
+    text-align: left;
+  }
+}
+
+/* ------------------------------ حالت خطا ------------------------------ */
+
+.report-error-card {
+  padding: var(--space-5);
+}
+
+/* ------------------------------ داشبورد خانه — کارت‌های قابل کلیک ------------------------------ */
+
+.stat-card--link {
+  cursor: pointer;
+  text-align: right;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.stat-card--link:hover {
+  box-shadow: var(--shadow-card);
+}
+
+.stat-card--link:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.stat-card__chip--sales {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}
+
+.stat-card__chip--cheque {
+  background: var(--fin-pending-soft);
+  color: var(--fin-debt-text);
+}
+
+/* ------------------------------ چاپ گزارش ------------------------------ */
+
+.print-header {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .no-print,
+  .sidebar,
+  .bottomnav,
+  .appbar,
+  .range-picker,
+  .filter-chips {
+    display: none !important;
+  }
+  .print-area {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    padding: 0;
+  }
+  .print-header {
+    display: block;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #14201c;
+  }
+  .print-header h1 {
+    margin: 0 0 4px;
+    font-size: 18pt;
+  }
+  .print-header p {
+    margin: 0 0 2px;
+    font-size: 10pt;
+    color: #444;
+  }
+  .print-header__meta {
+    font-size: 9pt;
+    color: #666;
+  }
+  .card,
+  .chart-card,
+  .kpi-card,
+  .metric-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
