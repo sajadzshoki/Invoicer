@@ -23,6 +23,8 @@ import { useToast } from "@/components/ui/Toast";
 import { useChequeStore } from "@/cheques/store";
 import { computeChequeSummary } from "@/cheques/helpers";
 import { useCostStore } from "@/costs/store";
+import { useSettings } from "@/settings/store";
+import { initialsOfName } from "@/lib/fa";
 import { useReportData } from "@/reports/selectors/dataSource";
 import { getDashboardSummary } from "@/reports/selectors/summary";
 import { resolveReportRange } from "@/reports/dateRange/range";
@@ -34,7 +36,7 @@ import {
 } from "@/lib/fa";
 import { todayIso } from "@/lib/jalali";
 
-const USER = { name: "مریم", initials: "م‌ر" };
+/** نام نمایشی کاربر از پروفایل کسب‌وکار (تنظیمات) گرفته می‌شود */
 
 const QUICK_ACTIONS: Array<{ id: string; label: string; icon: ReactNode }> = [
   { id: "invoice", label: "ثبت فاکتور", icon: <FilePlus2 size={22} aria-hidden /> },
@@ -49,7 +51,13 @@ export function HomePage() {
   const { costs } = useCostStore();
   const chequeStore = useChequeStore();
   const reportData = useReportData();
+  const { settings } = useSettings();
   const [loadingActivity, setLoadingActivity] = useState(true);
+
+  /* خوش‌آمدگویی با پروفایل کسب‌وکار — بدون نام ساختگی */
+  const business = settings.business;
+  const welcomeName = (business.ownerName || business.name).trim();
+  const businessTitle = business.name.trim() || "نسق";
 
   // شبیه‌سازی بارگذاری اولیه — نمایش اسکلت
   useEffect(() => {
@@ -89,7 +97,7 @@ export function HomePage() {
     <>
       <PageHeader
         title="خانه"
-        subtitle="فروشگاه آرمان"
+        subtitle={businessTitle}
         actions={
           <>
             <IconButton
@@ -104,7 +112,7 @@ export function HomePage() {
             >
               <Bell size={20} aria-hidden />
             </IconButton>
-            <Avatar label={USER.initials} size="md" />
+            <Avatar label={initialsOfName(welcomeName || "نسق")} size="md" />
           </>
         }
       />
@@ -114,7 +122,7 @@ export function HomePage() {
         <section className="home-greeting" aria-label="خوش‌آمدگویی">
           <div className="home-greeting__texts">
             <h2 className="home-greeting__hello">
-              سلام، {USER.name} 👋
+              {welcomeName ? `سلام، ${welcomeName} 👋` : "سلام 👋"}
             </h2>
             <p className="home-greeting__date">
               {faGreeting()} · {faTodayFull()}
