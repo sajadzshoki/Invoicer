@@ -5,8 +5,9 @@ import type {
   PaymentType,
   ShippingStatus,
 } from "./types";
-import { toFaDigits, toEnDigits } from "@/lib/fa";
+import { faNum, faToman, toFaDigits, toEnDigits } from "@/lib/fa";
 import {
+  faDateLong,
   isoFromDate,
   jalaliToIso,
   todayJalali,
@@ -137,14 +138,29 @@ export function faInvoiceNumber(invoiceNumber: string): string {
   return `${match[1]}${toFaDigits(Number(match[2]))}`;
 }
 
-/** ساخت شمارهٔ بعدی از روی شماره‌های موجود */
-export function nextInvoiceNumber(existing: string[]): string {
-  let max = 1000;
-  for (const num of existing) {
-    const m = num.match(/(\d+)$/);
+/**
+ * ساخت شمارهٔ بعدی فاکتور از روی تنظیمات شماره‌گذاری (فاز ۷).
+ *
+ * قانون‌ها:
+ * - شمارهٔ فاکتورهای موجود هرگز تغییر نمی‌کند.
+ * - شمارهٔ جدید از «شمارهٔ بعدی» تنظیمات شروع می‌شود، اما اگر فاکتوری
+ *   با همین پیشوند و شمارهٔ بزرگ‌تر وجود داشته باشد، از آن جلو می‌زند
+ *   تا شمارهٔ تکراری ساخته نشود (قطعی و بدون برخورد).
+ */
+export function nextInvoiceNumberFor(
+  numbering: { prefix: string; nextNumber: number },
+  existingNumbers: string[]
+): string {
+  const prefix = numbering.prefix.trim() || "INV";
+  const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`^${escaped}-(\\d+)$`);
+  let max = 0;
+  for (const num of existingNumbers) {
+    const m = num.match(pattern);
     if (m) max = Math.max(max, Number(m[1]));
   }
-  return `INV-${max + 1}`;
+  const next = Math.max(Math.max(1, Math.floor(numbering.nextNumber)), max + 1);
+  return `${prefix}-${next}`;
 }
 
 /* ------------------------------ جستجو و فیلتر تاریخ ------------------------------ */
@@ -199,19 +215,25 @@ export function presetDateRange(preset: DateRangePreset): DateRange | null {
 /* ------------------------------ متن اشتراک‌گذاری ------------------------------ */
 
 /** ساخت متن خلاصهٔ فاکتور برای چاپ/اشتراک‌گذاری */
-export function buildShareText(inv: Invoice, partyName: string): string {
-  const lines: string[] = [
+export function buildShareText(
+  inv: Invoice,
+  partyName: string,
+  businessName?: string
+): string {
+  const lines: string[] = [];
+  if (businessName?.trim()) lines.push(businessName.trim());
+  lines.push(
     `فاکتور ${INVOICE_TYPE_LABEL[inv.type]} ${inv.invoiceNumber}`,
     `طرف حساب: ${partyName}`,
-    `تاریخ: ${inv.date} — ساعت: ${toFaDigits(inv.time)}`,
+    `تاریخ: ${faDateLong(inv.date)} — ساعت: ${toFaDigits(inv.time)}`,
     "",
-    "اقلام:",
-  ];
+    "اقلام:"
+  );
   for (const item of inv.items) {
     lines.push(
-      `• ${item.nameSnapshot} × ${item.quantity}${item.unit ? ` ${item.unit}` : ""} — ${item.total.toLocaleString("fa-IR")} تومان`
+      `• ${item.nameSnapshot} × ${faNum(item.quantity)}${item.unit ? ` ${item.unit}` : ""} — ${faToman(item.total)}`
     );
   }
-  lines.push("", `مبلغ کل: ${inv.totalAmount.toLocaleString("fa-IR")} تومان`);
+  lines.push("", `مبلغ کل: ${faToman(inv.totalAmount)}`);
   return lines.join("\n");
 }

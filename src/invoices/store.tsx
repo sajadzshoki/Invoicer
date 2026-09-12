@@ -16,7 +16,8 @@ import type {
   PaymentType,
   ShippingStatus,
 } from "./types";
-import { computeTotals, deriveStatus, nextInvoiceNumber } from "./helpers";
+import { computeTotals, deriveStatus, nextInvoiceNumberFor } from "./helpers";
+import { useSettings } from "@/settings/store";
 import { SEED_INVOICES } from "./seed";
 import { useBookStore } from "@/book/store";
 import { useInventoryStore } from "@/inventory/store";
@@ -113,6 +114,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>(loadInitial);
   const book = useBookStore();
   const inventory = useInventoryStore();
+  const { settings } = useSettings();
+  const numbering = settings.invoice.numbering;
   const ensuredGeneral = useRef(false);
 
   useEffect(() => {
@@ -135,8 +138,9 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const nextNumber = useMemo(
-    () => nextInvoiceNumber(invoices.map((i) => i.invoiceNumber)),
-    [invoices]
+    () =>
+      nextInvoiceNumberFor(numbering.SELL, invoices.map((i) => i.invoiceNumber)),
+    [invoices, numbering.SELL]
   );
 
   const getInvoice = useCallback(
@@ -246,7 +250,14 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
 
       const invoice: Invoice = {
         id: editId ?? makeId("inv"),
-        invoiceNumber: prev?.invoiceNumber ?? nextNumber,
+        // شمارهٔ فاکتور جدید از تنظیمات شماره‌گذاری همان نوع گرفته می‌شود؛
+        // شمارهٔ فاکتورهای موجود هرگز تغییر نمی‌کند.
+        invoiceNumber:
+          prev?.invoiceNumber ??
+          nextInvoiceNumberFor(
+            numbering[input.type],
+            invoices.map((i) => i.invoiceNumber)
+          ),
         type: input.type,
         personId: input.personId,
         date: input.date,
@@ -342,7 +353,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
 
       return { ok: true, invoice };
     },
-    [invoices, inventory, book, nextNumber]
+    [invoices, inventory, book, numbering]
   );
 
   const deleteInvoice = useCallback(
@@ -363,7 +374,10 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const copy: Invoice = {
         ...source,
         id: makeId("inv"),
-        invoiceNumber: nextInvoiceNumber(invoices.map((i) => i.invoiceNumber)),
+        invoiceNumber: nextInvoiceNumberFor(
+          numbering.DRAFT,
+          invoices.map((i) => i.invoiceNumber)
+        ),
         type: "DRAFT",
         date: now.slice(0, 10),
         time: now.slice(11, 16),
@@ -382,7 +396,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       setInvoices((list) => [copy, ...list]);
       return copy;
     },
-    [invoices]
+    [invoices, numbering.DRAFT]
   );
 
   const resetToSample = useCallback(() => {

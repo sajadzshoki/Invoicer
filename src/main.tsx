@@ -11,6 +11,7 @@ import "./styles/invoices.css";
 import "./styles/cheques.css";
 import "./styles/costs.css";
 import "./styles/reports.css";
+import "./styles/settings.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

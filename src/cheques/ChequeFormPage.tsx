@@ -21,6 +21,7 @@ import { AttachmentPicker } from "@/components/common/AttachmentPicker";
 import { useChequeStore } from "@/cheques/store";
 import { useBookStore } from "@/book/store";
 import { useInvoiceStore } from "@/invoices/store";
+import { useSettings } from "@/settings/store";
 import type { ChequeAttachment, ChequeStatus, ChequeType } from "@/cheques/types";
 import { CHEQUE_STATUS_LABEL, CHEQUE_TYPE_LABEL, isValidSayadi } from "@/cheques/helpers";
 import { faInvoiceNumber, outstandingAmount } from "@/invoices/helpers";
@@ -47,6 +48,7 @@ export function ChequeFormPage() {
   const chequeStore = useChequeStore();
   const { persons } = useBookStore();
   const invoiceStore = useInvoiceStore();
+  const { settings } = useSettings();
 
   const editId = searchParams.get("id") ?? undefined;
   const editing = editId ? chequeStore.getCheque(editId) : undefined;
@@ -80,7 +82,10 @@ export function ChequeFormPage() {
   );
   const [dueDate, setDueDate] = useState(editing?.dueDate ?? "");
   const [sayadi, setSayadi] = useState(editing?.sayadiNumber ?? "");
-  const [bank, setBank] = useState<string | undefined>(editing?.bank);
+  // بانک پیش‌فرض از تنظیمات (فاز ۷) — فقط برای چک جدید
+  const [bank, setBank] = useState<string | undefined>(
+    editing?.bank ?? (settings.cheque.defaultBank || undefined)
+  );
   const [type, setType] = useState<ChequeType>(editing?.type ?? defaultType);
   const [description, setDescription] = useState(editing?.description ?? "");
   const [attachment, setAttachment] = useState<ChequeAttachment | undefined>(

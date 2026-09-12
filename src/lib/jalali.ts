@@ -2,7 +2,14 @@
  * ابزارهای تقویم جلالی (هجری شمسی)
  * الگوریتم تبدیل بر اساس jalaali-js (MIT) پیاده‌سازی شده است.
  * این ماژول برای انتخاب تاریخ در فاز ۲ و فازهای بعدی استفاده می‌شود.
+ *
+ * فاز ۷: نمایش تاریخ‌ها (faDateLong) نظام تقویم انتخابی را رعایت می‌کند؛
+ * انتخابگرهای تاریخ همان تجربهٔ جلالی‌محور را حفظ کرده‌اند و تاریخ‌های
+ * ذخیره‌شده همیشه ISO میلادی باقی می‌مانند.
  */
+
+import { dateLocale, toFaDigits } from "./fa";
+import { getFormatConfig } from "@/settings/formatConfig";
 
 export interface JDate {
   jy: number;
@@ -25,11 +32,12 @@ export const JALALI_MONTHS = [
   "اسفند",
 ];
 
+/* تقسیم به‌سمت صفر — دقیقاً مانند ~~ در jalaali-js (floor نیست!) */
 function div(a: number, b: number): number {
-  return Math.floor(a / b);
+  return Math.trunc(a / b);
 }
 function mod(a: number, b: number): number {
-  return a - Math.floor(a / b) * b;
+  return a - Math.trunc(a / b) * b;
 }
 
 function jalCal(jy: number): { leap: number; gy: number; march: number } {
@@ -79,6 +87,12 @@ export function jalaliMonthLength(jy: number, jm: number): number {
   return isLeapJalali(jy) ? 30 : 29;
 }
 
+/*
+ * توابع تبدیل، معادل کتابخانهٔ مرجع jalaali-js (MIT).
+ * نکتهٔ حیاتی (اصلاح فاز ۷): این الگوریتم با تقسیم «به‌سمت صفر» (trunc)
+ * کار می‌کند نه «به‌سمت پایین» (floor)؛ برای عددهای منفی نتیجه متفاوت است
+ * و استفاده از floor تبدیل تاریخ را خراب می‌کند.
+ */
 function g2d(gy: number, gm: number, gd: number): number {
   let d =
     div((gy + div(gm - 8, 6) + 100100) * 1461, 4) +
@@ -216,22 +230,32 @@ export function parseJalaliString(
 
 /** قالب‌بندی جلالی بلند؛ مثل «۱۸ شهریور ۱۴۰۵» */
 export function formatJalaliLong(j: JDate): string {
-  const fa = (n: number) =>
-    String(n).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-  return `${fa(j.jd)} ${JALALI_MONTHS[j.jm - 1]} ${fa(j.jy)}`;
+  return `${toFaDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]} ${toFaDigits(j.jy)}`;
 }
 
 /** قالب‌بندی کوتاه جلالی؛ مثل «۱۴۰۵/۰۶/۱۸» */
 export function formatJalaliShort(j: JDate): string {
-  const fa = (s: string) =>
-    s.replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
   const mm = String(j.jm).padStart(2, "0");
   const dd = String(j.jd).padStart(2, "0");
-  return fa(`${j.jy}/${mm}/${dd}`);
+  return toFaDigits(`${j.jy}/${mm}/${dd}`);
 }
 
-/** نمایش ISO به‌صورت جلالی بلند */
+/**
+ * نمایش ISO مطابق نظام تقویم انتخابی (فاز ۷):
+ * جلالی → «۱۸ شهریور ۱۴۰۵» | میلادی → «۱۲ سپتامبر ۲۰۲۶»
+ * تاریخ‌های ذخیره‌شده همیشه ISO میلادی می‌مانند و فقط نمایش تغییر می‌کند.
+ */
 export function faDateLong(iso: string): string {
+  const cfg = getFormatConfig();
+  if (cfg.dateSystem === "gregorian") {
+    const d = isoToDate(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    return new Intl.DateTimeFormat(dateLocale(), {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(d);
+  }
   const j = isoToJalali(iso);
   if (!j) return "";
   return formatJalaliLong(j);
@@ -256,19 +280,15 @@ export function relativeFaDate(iso: string, opts: { future?: boolean } = {}): st
     if (days === 1) return "دیروز";
     if (days === 2) return "پریروز";
     if (days > 2 && days <= 7) {
-      return `${faDays(days)} روز پیش`;
+      return `${toFaDigits(days)} روز پیش`;
     }
   } else {
     if (days === -1) return "فردا";
     if (days < -1 && days >= -7) {
-      return `${faDays(-days)} روز دیگر`;
+      return `${toFaDigits(-days)} روز دیگر`;
     }
   }
   return faDateLong(iso);
-}
-
-function faDays(n: number): string {
-  return String(n).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
 }
 
 /** ISO امروز */

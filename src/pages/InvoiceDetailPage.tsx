@@ -21,6 +21,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useInvoiceStore } from "@/invoices/store";
 import { useChequeStore } from "@/cheques/store";
 import { useBookStore } from "@/book/store";
+import { useSettings } from "@/settings/store";
 import {
   buildShareText,
   computeTotals,
@@ -42,6 +43,9 @@ export function InvoiceDetailPage() {
   const invoiceStore = useInvoiceStore();
   const chequeStore = useChequeStore();
   const { persons } = useBookStore();
+  const { settings } = useSettings();
+  const business = settings.business;
+  const appearance = settings.invoice.appearance;
 
   const invoice = id ? invoiceStore.getInvoice(id) : undefined;
   const party = persons.find((p) => p.id === invoice?.personId);
@@ -116,7 +120,7 @@ export function InvoiceDetailPage() {
 
   const doShare = async () => {
     setMenuOpen(false);
-    const text = buildShareText(invoice, party?.name ?? "—");
+    const text = buildShareText(invoice, party?.name ?? "—", business.name);
     try {
       if (navigator.share) {
         await navigator.share({ title: `فاکتور ${invoice.invoiceNumber}`, text });
@@ -227,11 +231,28 @@ export function InvoiceDetailPage() {
 
         {/* سند فاکتور — همین ناحیه چاپ می‌شود */}
         <div className="print-area">
-          <div className="inv-doc">
+          <div
+            className={cn(
+              "inv-doc",
+              appearance.layout === "formal" && "inv-doc--formal"
+            )}
+          >
+            {/* سربرگ فاکتور — از پروفایل کسب‌وکار (تنظیمات) خوانده می‌شود */}
             <div className="inv-doc__head">
-              <div>
-                <p className="inv-doc__brand">نسق</p>
-                <h2 className="inv-doc__title">فاکتور {INVOICE_TYPE_LABEL[invoice.type]}</h2>
+              <div className="inv-doc__brand-col">
+                {appearance.showLogo && business.logo && (
+                  <img
+                    src={business.logo}
+                    alt={business.name || "لوگوی کسب‌وکار"}
+                    className="inv-doc__logo"
+                  />
+                )}
+                <div>
+                  <p className="inv-doc__brand">
+                    {business.name.trim() || "نسق"}
+                  </p>
+                  <h2 className="inv-doc__title">فاکتور {INVOICE_TYPE_LABEL[invoice.type]}</h2>
+                </div>
               </div>
               <div className="inv-doc__meta">
                 <span>شماره: <strong dir="ltr">{faInvoiceNumber(invoice.invoiceNumber)}</strong></span>
@@ -239,6 +260,25 @@ export function InvoiceDetailPage() {
                 <span>ساعت: {toFaDigits(invoice.time)}</span>
               </div>
             </div>
+
+            {(appearance.showBusinessAddress && business.address) ||
+            (appearance.showBusinessPhone && (business.phone || business.mobile)) ||
+            business.economicCode ? (
+              <div className="inv-doc__business">
+                {appearance.showBusinessAddress && business.address && (
+                  <span>
+                    {business.address}
+                    {business.postalCode ? ` · کد پستی: ${toFaDigits(business.postalCode)}` : ""}
+                  </span>
+                )}
+                {appearance.showBusinessPhone && (business.phone || business.mobile) && (
+                  <span dir="ltr">{business.phone || business.mobile}</span>
+                )}
+                {business.economicCode && (
+                  <span>کد اقتصادی: {toFaDigits(business.economicCode)}</span>
+                )}
+              </div>
+            ) : null}
 
             <div className="inv-doc__party">
               <div>
@@ -249,7 +289,7 @@ export function InvoiceDetailPage() {
                     <Phone size={13} aria-hidden /> {party.phone}
                   </p>
                 )}
-                {party?.address && (
+                {appearance.showCustomerAddress && party?.address && (
                   <p className="inv-doc__party-meta">{party.address}</p>
                 )}
               </div>
@@ -348,9 +388,9 @@ export function InvoiceDetailPage() {
               </div>
             </div>
 
-            {/* تسویه، ارسال و اطلاعات اختیاری */}
+            {/* تسویه، ارسال و اطلاعات اختیاری — نمایش طبق تنظیمات ظاهر فاکتور */}
             <div className="inv-doc__foot">
-              {invoice.type !== "DRAFT" && (
+              {appearance.showPaymentInfo && invoice.type !== "DRAFT" && (
                 <div className="inv-doc__foot-block">
                   <span className="inv-muted">تسویه</span>
                   <p>
@@ -385,7 +425,7 @@ export function InvoiceDetailPage() {
                   <p>{invoice.description}</p>
                 </div>
               )}
-              {invoice.note && (
+              {appearance.showNotes && invoice.note && (
                 <div className="inv-doc__foot-block">
                   <span className="inv-muted">یادداشت</span>
                   <p>{invoice.note}</p>
@@ -404,6 +444,10 @@ export function InvoiceDetailPage() {
                 </div>
               )}
             </div>
+
+            {appearance.showFooter && appearance.footerText.trim() && (
+              <p className="inv-doc__footer-text">{appearance.footerText}</p>
+            )}
           </div>
         </div>
 

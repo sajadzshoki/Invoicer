@@ -560,6 +560,45 @@
   gap: var(--space-4);
   flex-wrap: wrap;
 }
+.inv-doc__brand-col {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.inv-doc__logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: #fff;
+}
+.inv-doc__business {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+.inv-doc__footer-text {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  text-align: center;
+  white-space: pre-line;
+  border-top: 1px dashed var(--color-border);
+  padding-top: var(--space-3);
+}
+/* چیدمان رسمی: سربرگ سنگین‌تر با خط جدا و نوار بالایی */
+.inv-doc--formal {
+  border-width: 2px;
+}
+.inv-doc--formal .inv-doc__head {
+  border-bottom: 2px solid var(--color-primary-text);
+  padding-bottom: var(--space-3);
+}
+.inv-doc--formal .inv-doc__title {
+  font-size: var(--text-lg);
+}
 .inv-doc__brand {
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
@@ -680,9 +719,21 @@
     top: 0;
     padding: 0;
   }
+  /* چاپ همیشه روی زمینهٔ روشن و خوانا — حتی اگر اپ تاریک باشد */
   .inv-doc {
+    --color-surface: #ffffff;
+    --color-surface-2: #f7f7f7;
+    --color-text-1: #17201d;
+    --color-text-2: #3d4a46;
+    --color-text-3: #61706b;
+    --color-border: #d8dcda;
+    background: #ffffff;
+    color: #17201d;
     border: none;
     box-shadow: none;
     border-radius: 0;
+  }
+  .inv-doc__logo {
+    border: none;
   }
 }

@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/Choice";
 import { ErrorState } from "@/components/ui/Feedback";
 import { useToast } from "@/components/ui/Toast";
 import { useInventoryStore } from "@/inventory/store";
+import { useSettings } from "@/settings/store";
 import type { ItemType } from "@/inventory/types";
 import { ImagePicker } from "@/components/product/ImagePicker";
 import { CategoriesSheet } from "@/components/product/CategoriesSheet";
@@ -61,6 +62,7 @@ export function ProductFormPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const store = useInventoryStore();
+  const { settings } = useSettings();
   const { products, categories, addProduct, updateProduct, isBarcodeTaken } = store;
 
   const editId = searchParams.get("id") ?? undefined;
@@ -88,9 +90,12 @@ export function ProductFormPage() {
     editingItem?.showInOnlinePriceList ?? false
   );
 
-  // فیلدهای کالا
+  // فیلدهای کالا — برای کالای «جدید» پیش‌فرض‌ها از تنظیمات می‌آیند (فاز ۷)؛
+  // کالای موجود هنگام ویرایش با مقدارهای خودش باز می‌شود.
   const [barcode, setBarcode] = useState(editingItem?.barcode ?? "");
-  const [unit, setUnit] = useState(editingItem?.unit ?? "");
+  const [unit, setUnit] = useState(
+    editingItem?.unit ?? settings.inventory.defaultUnit
+  );
   const [initialStock, setInitialStock] = useState(
     isEdit ? faNum(editingItem?.currentStock ?? 0) : ""
   );
@@ -101,7 +106,11 @@ export function ProductFormPage() {
     editingItem?.salePrice ? faNum(editingItem.salePrice) : ""
   );
   const [reorderPoint, setReorderPoint] = useState(
-    editingItem?.reorderPoint !== undefined ? faNum(editingItem.reorderPoint) : ""
+    editingItem?.reorderPoint !== undefined
+      ? faNum(editingItem.reorderPoint)
+      : settings.inventory.defaultReorderPoint !== undefined
+        ? faNum(settings.inventory.defaultReorderPoint)
+        : ""
   );
   const [minOrderQty, setMinOrderQty] = useState(
     editingItem?.minimumOrderQuantity !== undefined

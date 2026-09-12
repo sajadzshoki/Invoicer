@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "@/lib/theme";
+import { SettingsProvider } from "@/settings/store";
 import { ToastProvider } from "@/components/ui/Toast";
 import { BookProvider } from "@/book/store";
 import { InventoryProvider } from "@/inventory/store";
@@ -7,6 +8,18 @@ import { InvoiceProvider } from "@/invoices/store";
 import { ChequeProvider } from "@/cheques/store";
 import { CostProvider } from "@/costs/store";
 import { ReportRangeProvider } from "@/reports/dateRange/ReportRangeContext";
+import { SettingsHomePage } from "@/settings/pages/SettingsHomePage";
+import { BusinessSettingsPage } from "@/settings/pages/BusinessSettingsPage";
+import { InvoiceSettingsPage } from "@/settings/pages/InvoiceSettingsPage";
+import { InvoiceAppearancePage } from "@/settings/pages/InvoiceAppearancePage";
+import { TaxSettingsPage } from "@/settings/pages/TaxSettingsPage";
+import { FinancialSettingsPage } from "@/settings/pages/FinancialSettingsPage";
+import { CategoriesPage } from "@/settings/pages/CategoriesPage";
+import { InventorySettingsPage } from "@/settings/pages/InventorySettingsPage";
+import { ChequeSettingsPage } from "@/settings/pages/ChequeSettingsPage";
+import { DataSettingsPage } from "@/settings/pages/DataSettingsPage";
+import { AppearanceSettingsPage } from "@/settings/pages/AppearanceSettingsPage";
+import { AboutPage } from "@/settings/pages/AboutPage";
 import { ReportsHomePage } from "@/reports/pages/ReportsHomePage";
 import { SalesReportPage } from "@/reports/pages/SalesReportPage";
 import { PurchasesReportPage } from "@/reports/pages/PurchasesReportPage";
@@ -41,6 +54,7 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export default function App() {
   return (
+    <SettingsProvider>
     <ThemeProvider>
       <ToastProvider>
         <BookProvider>
@@ -104,6 +118,23 @@ export default function App() {
                       <Route path="cheques" element={<ChequeReportPage />} />
                     </Route>
 
+                    {/* ماژول تنظیمات (فاز ۷) */}
+                    <Route path="settings" element={<SettingsHomePage />} />
+                    <Route path="settings/business" element={<BusinessSettingsPage />} />
+                    <Route path="settings/invoice" element={<InvoiceSettingsPage />} />
+                    <Route
+                      path="settings/invoice/appearance"
+                      element={<InvoiceAppearancePage />}
+                    />
+                    <Route path="settings/tax" element={<TaxSettingsPage />} />
+                    <Route path="settings/financial" element={<FinancialSettingsPage />} />
+                    <Route path="settings/categories" element={<CategoriesPage />} />
+                    <Route path="settings/inventory" element={<InventorySettingsPage />} />
+                    <Route path="settings/cheque" element={<ChequeSettingsPage />} />
+                    <Route path="settings/data" element={<DataSettingsPage />} />
+                    <Route path="settings/appearance" element={<AppearanceSettingsPage />} />
+                    <Route path="settings/about" element={<AboutPage />} />
+
                     <Route path="more" element={<MorePage />} />
                     <Route path="design-system" element={<DesignSystemPage />} />
                     <Route path="*" element={<NotFoundPage />} />
@@ -117,5 +148,6 @@ export default function App() {
         </BookProvider>
       </ToastProvider>
     </ThemeProvider>
+    </SettingsProvider>
   );
 }

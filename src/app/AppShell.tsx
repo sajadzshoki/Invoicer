@@ -1,28 +1,48 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useTheme } from "@/lib/theme";
 import { Avatar } from "@/components/ui/Card";
 import { Switch } from "@/components/ui/Choice";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Overlay";
+import { initialsOfName } from "@/lib/fa";
+import { useAppSettings } from "@/settings/store";
+import { getActiveGuard } from "@/settings/navGuard";
 import { NAV_DESTINATIONS } from "./navigation";
 import { LogoMark } from "./Logo";
-
-const CURRENT_USER = {
-  name: "مریم رضایی",
-  initials: "م‌ر",
-  business: "فروشگاه آرمان",
-};
 
 /** پوستهٔ اصلی اپ — سایدبار (دسکتاپ) + محتوا + ناوبری پایین (موبایل) */
 export function AppShell() {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
+  const settings = useAppSettings();
+  const business = settings.business;
+
+  /** مسیر در انتظار — وقتی خروج با تغییر ذخیره‌نشده همراه است */
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
 
   // با تغییر صفحه، اسکرول به بالا برمی‌گردد
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [location.pathname]);
+
+  /**
+   * ناوبری با محافظ تغییرات ذخیره‌نشده (فاز ۷):
+   * اگر صفحه‌ای تغییر ذخیره‌نشده داشته باشد، خروج تأیید می‌خواهد.
+   */
+  const handleNavClick = (e: MouseEvent, path: string) => {
+    const guard = getActiveGuard();
+    if (guard && guard.isDirty()) {
+      e.preventDefault();
+      setPendingPath(path);
+    }
+  };
+
+  const displayName = business.ownerName || business.name || "کاربر نسق";
+  const displayBusiness = business.name || "کسب‌وکار من";
 
   return (
     <div className="shell">
@@ -45,6 +65,7 @@ export function AppShell() {
               className={({ isActive }) =>
                 cn("sidebar__item", isActive && "is-active")
               }
+              onClick={(e) => handleNavClick(e, item.path)}
             >
               {item.icon}
               {item.label}
@@ -66,12 +87,21 @@ export function AppShell() {
               style={{ minHeight: 32 }}
             />
           </div>
-          <button type="button" className="sidebar__profile">
-            <Avatar label={CURRENT_USER.initials} size="md" />
+          {/* پروفایل از اطلاعات کسب‌وکار (تنظیمات) خوانده می‌شود */}
+          <button
+            type="button"
+            className="sidebar__profile"
+            onClick={(e) => handleNavClick(e, "/settings/business")}
+          >
+            <Avatar
+              label={initialsOfName(displayName)}
+              src={business.logo}
+              size="md"
+            />
             <span>
-              <span className="sidebar__profile-name">{CURRENT_USER.name}</span>
+              <span className="sidebar__profile-name">{displayName}</span>
               <span className="sidebar__profile-caption" style={{ display: "block" }}>
-                {CURRENT_USER.business}
+                {displayBusiness}
               </span>
             </span>
           </button>
@@ -93,12 +123,48 @@ export function AppShell() {
             className={({ isActive }) =>
               cn("bottomnav__item", isActive && "is-active")
             }
+            onClick={(e) => handleNavClick(e, item.path)}
           >
             <span className="bottomnav__icon">{item.icon}</span>
             <span className="bottomnav__label">{item.label}</span>
           </NavLink>
         ))}
       </nav>
+
+      {/* تأیید خروج با تغییر ذخیره‌نشده */}
+      <Modal
+        open={!!pendingPath}
+        onClose={() => setPendingPath(null)}
+        title="تغییرات ذخیره نشده‌اند"
+        description="قبل از رفتن به صفحهٔ دیگر، وضعیت تغییرات این صفحه را مشخص کنید."
+        footer={
+          <div className="modal-actions">
+            <Button variant="secondary" onClick={() => setPendingPath(null)}>
+              انصراف
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                const path = pendingPath;
+                setPendingPath(null);
+                if (path) navigate(path);
+              }}
+            >
+              خروج بدون ذخیره
+            </Button>
+            <Button
+              onClick={() => {
+                getActiveGuard()?.save();
+                const path = pendingPath;
+                setPendingPath(null);
+                if (path) navigate(path);
+              }}
+            >
+              ذخیره و خروج
+            </Button>
+          </div>
+        }
+      />
     </div>
   );
 }

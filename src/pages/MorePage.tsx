@@ -1,33 +1,40 @@
-import { useState } from "react";
 import {
   ArrowLeftRight,
   BarChart3,
   Boxes,
   ChevronLeft,
+  Database,
   FileSignature,
   HandCoins,
   HelpCircle,
   Info,
   Moon,
+  Palette,
   Pencil,
   PiggyBank,
+  PencilLine,
   ReceiptText,
   Repeat,
   Scale,
   Settings,
   ShoppingCart,
+  Store,
   Sun,
+  Tag,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/app/PageHeader";
 import { Avatar, DividerLabel } from "@/components/ui/Card";
-import { IconButton, Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/Button";
 import { ListItem } from "@/components/ui/Card";
 import { Switch } from "@/components/ui/Choice";
-import { Modal } from "@/components/ui/Overlay";
 import { useToast } from "@/components/ui/Toast";
 import { useTheme } from "@/lib/theme";
+import { useAppSettings } from "@/settings/store";
+import { APP_PHASE, APP_VERSION } from "@/settings/defaults";
+import { initialsOfName, toFaDigits } from "@/lib/fa";
 
 const MODULES = [
   {
@@ -54,9 +61,9 @@ const MODULES = [
   {
     id: "settings",
     title: "تنظیمات",
-    caption: "کسب‌وکار، واحد پول و ترجیحات",
+    caption: "کسب‌وکار، فاکتور، واحد پول و داده‌ها",
     icon: <Settings size={20} aria-hidden />,
-    path: null,
+    path: "/settings",
   },
 ];
 
@@ -78,11 +85,23 @@ const REPORT_LINKS = {
   ],
 };
 
+/** میان‌برهای تنظیمات — مسیرهای واقعی، بدون جای‌نگه‌دار */
+const SETTINGS_LINKS = [
+  { title: "کسب‌وکار", caption: "نام، لوگو و اطلاعات تماس", path: "/settings/business", icon: <Store size={20} aria-hidden /> },
+  { title: "فاکتور", caption: "شماره‌گذاری، مالیات و ظاهر", path: "/settings/invoice", icon: <PencilLine size={20} aria-hidden /> },
+  { title: "مالی", caption: "واحد پول و نمایش مبالغ", path: "/settings/financial", icon: <Wallet size={20} aria-hidden /> },
+  { title: "دسته‌بندی‌ها", caption: "کالا، هزینه و درآمد", path: "/settings/categories", icon: <Tag size={20} aria-hidden /> },
+  { title: "داده‌ها", caption: "پشتیبان‌گیری، بازیابی و پاک‌سازی", path: "/settings/data", icon: <Database size={20} aria-hidden /> },
+  { title: "ظاهر", caption: "تم روشن، تاریک یا سیستم", path: "/settings/appearance", icon: <Palette size={20} aria-hidden /> },
+  { title: "درباره نسق", caption: `نسخهٔ ${toFaDigits(APP_VERSION)} — ${APP_PHASE}`, path: "/settings/about", icon: <Info size={20} aria-hidden /> },
+];
+
 export function MorePage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { theme, toggleTheme } = useTheme();
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const settings = useAppSettings();
+  const business = settings.business;
 
   const comingSoon = (title: string) =>
     showToast({
@@ -91,20 +110,31 @@ export function MorePage() {
       variant: "info",
     });
 
+  const displayName = business.ownerName || business.name || "کاربر نسق";
+  const displayBusiness = business.name || "حساب نسق";
+
   return (
     <>
       <PageHeader title="بیشتر" subtitle="بخش‌ها و تنظیمات" />
 
       <div className="page">
-        {/* پروفایل کاربر */}
+        {/* پروفایل — از اطلاعات کسب‌وکار (تنظیمات) خوانده می‌شود */}
         <section aria-label="پروفایل">
           <div className="profile-card">
-            <Avatar label="م‌ر" size="lg" />
+            <Avatar
+              label={initialsOfName(displayName)}
+              src={business.logo}
+              size="lg"
+            />
             <div className="profile-card__body">
-              <p className="profile-card__name">مریم رضایی</p>
-              <p className="profile-card__caption">فروشگاه آرمان · نسخهٔ آزمایشی</p>
+              <p className="profile-card__name">{displayName}</p>
+              <p className="profile-card__caption">{displayBusiness}</p>
             </div>
-            <IconButton label="ویرایش پروفایل" tone="filled" onClick={() => comingSoon("ویرایش پروفایل")}>
+            <IconButton
+              label="ویرایش پروفایل کسب‌وکار"
+              tone="filled"
+              onClick={() => navigate("/settings/business")}
+            >
               <Pencil size={18} aria-hidden />
             </IconButton>
           </div>
@@ -122,9 +152,29 @@ export function MorePage() {
                   title={mod.title}
                   caption={mod.caption}
                   chevron
-                  onClick={() =>
-                    mod.path ? navigate(mod.path) : comingSoon(mod.title)
-                  }
+                  onClick={() => navigate(mod.path)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* تنظیمات — میان‌برهای مستقیم */}
+        <section className="page__section" aria-label="تنظیمات">
+          <div className="section-head">
+            <h2>تنظیمات</h2>
+          </div>
+          <div className="more-group">
+            <div className="list">
+              {SETTINGS_LINKS.map((item) => (
+                <ListItem
+                  key={item.path}
+                  icon={item.icon}
+                  tintIcon
+                  title={item.title}
+                  caption={item.caption}
+                  chevron
+                  onClick={() => navigate(item.path)}
                 />
               ))}
             </div>
@@ -186,7 +236,9 @@ export function MorePage() {
                 </span>
                 <span className="list-item__body">
                   <span className="list-item__title">حالت تاریک</span>
-                  <span className="list-item__caption">ظاهر اپلیکیشن را تیره می‌کند</span>
+                  <span className="list-item__caption">
+                    برای انتخاب «پیروی از سیستم» به تنظیمات ظاهر بروید
+                  </span>
                 </span>
                 <span className="list-item__end">
                   <Switch
@@ -210,9 +262,9 @@ export function MorePage() {
                 icon={<Info size={20} aria-hidden />}
                 tintIcon
                 title="دربارهٔ نسق"
-                caption="نسخهٔ ۰٫۵ — فاز ۵"
+                caption={`نسخهٔ ${toFaDigits(APP_VERSION)} — ${APP_PHASE}`}
                 chevron
-                onClick={() => setAboutOpen(true)}
+                onClick={() => navigate("/settings/about")}
               />
             </div>
           </div>
@@ -229,23 +281,6 @@ export function MorePage() {
           </Link>
         </p>
       </div>
-
-      <Modal
-        open={aboutOpen}
-        onClose={() => setAboutOpen(false)}
-        title="دربارهٔ نسق"
-        description="حسابداری ساده، سریع و شفاف برای کسب‌وکارهای کوچک ایرانی."
-        footer={
-          <Button onClick={() => setAboutOpen(false)}>بستن</Button>
-        }
-      >
-        <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-2)", lineHeight: "var(--leading-relaxed)" }}>
-          شما در حال استفاده از فاز ۵ نسق هستید؛ فونداسیون، سیستم طراحی، دفتر
-          حساب طرف حساب‌ها، کالاها و خدمات، فاکتورهای فروش/خرید/پیش‌فاکتور،
-          ماژول چک‌ها (دریافتی، پرداختی و خرج چک) و ماژول هزینه‌ها و درآمدها.
-          بخش‌های گزارش و اتصال به بک‌اند در فازهای بعدی اضافه می‌شوند.
-        </p>
-      </Modal>
     </>
   );
 }

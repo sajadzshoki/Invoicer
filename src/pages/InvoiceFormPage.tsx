@@ -38,6 +38,7 @@ import { InvoiceTotals } from "@/components/invoice/InvoiceTotals";
 import { GENERAL_CUSTOMER_NAME, useInvoiceStore } from "@/invoices/store";
 import { useBookStore } from "@/book/store";
 import { useInventoryStore } from "@/inventory/store";
+import { useSettings } from "@/settings/store";
 import type { Product } from "@/inventory/types";
 import type {
   InvoiceType,
@@ -125,6 +126,7 @@ export function InvoiceFormPage() {
   const invoiceStore = useInvoiceStore();
   const { persons } = useBookStore();
   const inventory = useInventoryStore();
+  const { settings } = useSettings();
 
   const editId = searchParams.get("id") ?? undefined;
   const editing = useMemo(
@@ -135,7 +137,11 @@ export function InvoiceFormPage() {
   const notFound = isEdit && !editing;
 
   /* ---------- حالت فرم ---------- */
-  const [type, setType] = useState<InvoiceType>(editing?.type ?? "SELL");
+  /* پیش‌فرض‌ها فقط برای فاکتور «جدید» از تنظیمات می‌آیند؛ فاکتور موجود
+     هنگام ویرایش با مقدارهای خودش باز می‌شود و تنظیمات به آن تحمیل نمی‌شود. */
+  const [type, setType] = useState<InvoiceType>(
+    editing?.type ?? settings.invoice.defaults.type
+  );
   const [date, setDate] = useState(editing?.date ?? todayIso());
   const [time, setTime] = useState(editing?.time ?? nowHHMM());
   const [partyId, setPartyId] = useState<string | undefined>(editing?.personId);
@@ -156,9 +162,12 @@ export function InvoiceFormPage() {
   const [invDiscount, setInvDiscount] = useState(
     editing && editing.discount > 0 ? faNum(editing.discount) : ""
   );
-  const [taxEnabled, setTaxEnabled] = useState(editing?.taxEnabled ?? false);
+  /* مالیات: پیش‌فرض از تنظیمات (فاز ۷) — فقط برای فاکتور جدید */
+  const [taxEnabled, setTaxEnabled] = useState(
+    editing?.taxEnabled ?? settings.tax.enabled
+  );
   const [taxRate, setTaxRate] = useState(
-    editing ? faNum(editing.taxRate) : faNum(9)
+    editing ? faNum(editing.taxRate) : faNum(settings.tax.rate)
   );
   const [extraCosts, setExtraCosts] = useState<ExtraCostRow[]>(
     () =>
@@ -169,7 +178,10 @@ export function InvoiceFormPage() {
       })) ?? []
   );
   const [payment, setPayment] = useState<PaymentType>(
-    editing?.paymentType ?? "CASH"
+    editing?.paymentType ??
+      (settings.payments[settings.invoice.defaults.paymentType]
+        ? settings.invoice.defaults.paymentType
+        : "CASH")
   );
   const [paidAmount, setPaidAmount] = useState(
     editing && editing.paidAmount > 0 ? faNum(editing.paidAmount) : ""
@@ -177,7 +189,10 @@ export function InvoiceFormPage() {
   const [shipping, setShipping] = useState<ShippingStatus>(
     editing?.shippingStatus ?? "NOT_SENT"
   );
-  const [description, setDescription] = useState(editing?.description ?? "");
+  /* توضیح پیش‌فرض از تنظیمات (فاز ۷) — فقط برای فاکتور جدید */
+  const [description, setDescription] = useState(
+    editing?.description ?? settings.invoice.defaults.description
+  );
   const [note, setNote] = useState(editing?.note ?? "");
   const [signature, setSignature] = useState(editing?.signature ?? "");
   const [customerContact, setCustomerContact] = useState(
@@ -911,7 +926,16 @@ export function InvoiceFormPage() {
                       },
                       { id: "CHEQUE", label: "چک", icon: <ScrollText size={20} aria-hidden /> },
                     ] as Array<{ id: PaymentType; label: string; icon: React.ReactNode }>
-                  ).map((option) => (
+                  )
+                    /* روش‌های غیرفعال در تنظیمات برای فاکتور «جدید» پنهان می‌شوند؛
+                       هنگام ویرایش فاکتور قدیمی، روش همان فاکتور همیشه قابل انتخاب
+                       می‌ماند تا فاکتورهای موجود هرگز نامعتبر نشوند. */
+                    .filter(
+                      (option) =>
+                        settings.payments[option.id] ||
+                        (isEdit && editing?.paymentType === option.id)
+                    )
+                    .map((option) => (
                     <button
                       key={option.id}
                       type="button"

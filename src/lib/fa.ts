@@ -1,13 +1,26 @@
 /**
  * ابزارهای قالب‌بندی فارسی — ارقام، مبالغ و تاریخ
  * همهٔ نمایش‌های عددی اپلیکیشن باید از این توابع عبور کنند.
+ *
+ * فاز ۷: این توابع به «پیکربندی نمایش» تنظیمات وصل هستند:
+ * - واحد پول (تومان/ریال) فقط در نمایش اثر دارد؛ مقادیر ذخیره‌شده همیشه
+ *   به تومان‌اند و تبدیل تنها به‌صورت صریح در toDisplayAmount انجام می‌شود.
+ * - ارقام فارسی/لاتین و جداکنندهٔ هزارگان از تنظیمات خوانده می‌شوند.
  */
+
+import {
+  currencyLabel,
+  getFormatConfig,
+  toDisplayAmount,
+} from "@/settings/formatConfig";
 
 const FA_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
-/** تبدیل ارقام لاتین یک رشته به ارقام فارسی */
+/** تبدیل ارقام لاتین یک رشته به ارقام فارسی (در حالت ارقام لاتین، بدون تغییر) */
 export function toFaDigits(input: string | number): string {
-  return String(input).replace(/[0-9]/g, (d) => FA_DIGITS[Number(d)]);
+  const s = String(input);
+  if (getFormatConfig().digits === "en") return s;
+  return s.replace(/[0-9]/g, (d) => FA_DIGITS[Number(d)]);
 }
 
 /** تبدیل ارقام فارسی/عربی به لاتین (برای پردازش ورودی کاربر) */
@@ -17,55 +30,76 @@ export function toEnDigits(input: string): string {
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 }
 
-/** قالب‌بندی عدد با جداکنندهٔ هزارگان فارسی و ارقام فارسی */
+/** لوکیل نمایش تاریخ بر اساس تنظیمات (نظام تقویم + شیوهٔ ارقام) */
+export function dateLocale(): string {
+  const cfg = getFormatConfig();
+  const calendar = cfg.dateSystem === "gregorian" ? "gregory" : "persian";
+  const base = cfg.digits === "fa" ? "fa-IR" : "en-GB";
+  return `${base}-u-ca-${calendar}`;
+}
+
+/** قالب‌بندی عدد با جداکنندهٔ هزارگان و ارقام مطابق تنظیمات */
 export function faNum(n: number, opts: { decimals?: number } = {}): string {
   const { decimals = 0 } = opts;
+  const cfg = getFormatConfig();
   const en = Math.abs(n).toLocaleString("en-US", {
     maximumFractionDigits: decimals,
     minimumFractionDigits: 0,
+    useGrouping: cfg.thousandSeparator,
   });
+  if (cfg.digits === "en") {
+    return n < 0 ? `-${en}` : en;
+  }
   const fa = toFaDigits(en).replace(/,/g, "٬").replace(/\./g, "٫");
   return n < 0 ? `−${fa}` : fa;
 }
 
-/** قالب‌بندی مبلغ به تومان */
+/** واحد پول انتخابی به‌صورت متن؛ تومان یا ریال */
+export function currencyUnitLabel(): string {
+  return currencyLabel();
+}
+
+/** قالب‌بندی مبلغ با واحد پول انتخابی — مقادیر ورودی همیشه به تومان‌اند */
 export function faToman(n: number): string {
-  return `${faNum(n)} تومان`;
+  return `${faNum(toDisplayAmount(n))} ${currencyLabel()}`;
 }
 
 /** نمایش فشردهٔ مبلغ برای داشبورد؛ مثل «۸۶٫۴ میلیون تومان» */
 export function faTomanCompact(n: number): string {
-  const abs = Math.abs(n);
+  const display = toDisplayAmount(n);
+  const label = currencyLabel();
+  const abs = Math.abs(display);
   if (abs >= 1_000_000_000) {
-    return `${faNum(n / 1_000_000_000, { decimals: 1 })} میلیارد تومان`;
+    return `${faNum(display / 1_000_000_000, { decimals: 1 })} میلیارد ${label}`;
   }
   if (abs >= 1_000_000) {
-    return `${faNum(n / 1_000_000, { decimals: 1 })} میلیون تومان`;
+    return `${faNum(display / 1_000_000, { decimals: 1 })} میلیون ${label}`;
   }
   return faToman(n);
 }
 
-/** تاریخ امروز به هجری شمسی؛ مثل «۱۸ شهریور ۱۴۰۵» */
+/** تاریخ امروز مطابق نظام تقویم انتخابی؛ مثل «۱۸ شهریور ۱۴۰۵» */
 export function faTodayLong(): string {
-  return new Intl.DateTimeFormat("fa-IR", {
+  return new Intl.DateTimeFormat(dateLocale(), {
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(new Date());
 }
 
-/** روز هفته و تاریخ به هجری شمسی؛ مثل «سه‌شنبه، ۱۸ شهریور» */
+/** روز هفته و تاریخ مطابق تنظیمات؛ مثل «سه‌شنبه، ۱۸ شهریور» */
 export function faTodayFull(): string {
-  return new Intl.DateTimeFormat("fa-IR", {
+  return new Intl.DateTimeFormat(dateLocale(), {
     weekday: "long",
     day: "numeric",
     month: "long",
   }).format(new Date());
 }
 
-/** ساعت به فارسی؛ مثل «۱۴:۳۰» با ارقام فارسی */
+/** ساعت با ارقام مطابق تنظیمات؛ مثل «۱۴:۳۰» */
 export function faTimeNow(): string {
-  return new Intl.DateTimeFormat("fa-IR", {
+  const locale = getFormatConfig().digits === "fa" ? "fa-IR" : "en-GB";
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date());

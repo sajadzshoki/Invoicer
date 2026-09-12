@@ -19,7 +19,16 @@ import { allowedTransitions, hasSettlementEffect } from "./helpers";
 import { SEED_CHEQUES, SEED_CHEQUE_REMINDERS } from "./seed";
 import { useBookStore } from "@/book/store";
 import { useInvoiceStore } from "@/invoices/store";
-import { todayIso } from "@/lib/jalali";
+import { useSettings } from "@/settings/store";
+import { isoFromDate, isoToDate, todayIso } from "@/lib/jalali";
+
+/** جابه‌جایی یک تاریخ ISO به اندازهٔ n روز (منفی = عقب‌تر) */
+function shiftIsoDays(iso: string, n: number): string {
+  if (!n) return iso;
+  const d = isoToDate(iso);
+  d.setDate(d.getDate() + n);
+  return isoFromDate(d);
+}
 
 /**
  * مخزن دادهٔ محلی ماژول چک‌ها (فاز ۵)
@@ -99,6 +108,7 @@ export function ChequeProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ChequeData>(loadInitial);
   const book = useBookStore();
   const invoiceStore = useInvoiceStore();
+  const { settings } = useSettings();
 
   useEffect(() => {
     try {
@@ -202,39 +212,52 @@ export function ChequeProvider({ children }: { children: ReactNode }) {
         bank: input.bank?.trim() || undefined,
         description: input.description?.trim() || undefined,
         attachment: input.attachment,
-        reminderId: prev?.reminderId ?? makeId("chr"),
+        // یادآور محلی: برای چک جدید فقط وقتی در تنظیمات فعال باشد ساخته
+        // می‌شود؛ چک‌های موجود یادآور قبلی خود را حفظ می‌کنند.
+        reminderId:
+          settings.cheque.reminderEnabled || prev?.reminderId
+            ? (prev?.reminderId ?? makeId("chr"))
+            : undefined,
         createdAt: prev?.createdAt ?? now,
         updatedAt: now,
-      };
-
-      // یادآور محلی سررسید
-      const reminder: ChequeReminder = {
-        id: cheque.reminderId!,
-        chequeId,
-        title: "یادآور سررسید چک",
-        date: input.dueDate,
-        description: invoice
-          ? `سررسید چک فاکتور ${invoice.invoiceNumber}`
-          : "سررسید چک ثبت‌شده",
-        createdAt: now,
       };
 
       // اثر مالی — حذف رکوردهای قبلی و اعمال دوباره
       applyEffect(cheque);
 
-      setData((d) => ({
-        cheques: d.cheques.some((c) => c.id === chequeId)
-          ? d.cheques.map((c) => (c.id === chequeId ? cheque : c))
-          : [cheque, ...d.cheques],
-        reminders: [
-          reminder,
-          ...d.reminders.filter((r) => r.id !== reminder.id),
-        ],
-      }));
+      if (cheque.reminderId) {
+        // یادآور محلی سررسید — با احتساب «چند روز قبل» از تنظیمات
+        const reminder: ChequeReminder = {
+          id: cheque.reminderId,
+          chequeId,
+          title: "یادآور سررسید چک",
+          date: shiftIsoDays(input.dueDate, -settings.cheque.reminderDaysBefore),
+          description: invoice
+            ? `سررسید چک فاکتور ${invoice.invoiceNumber}`
+            : "سررسید چک ثبت‌شده",
+          createdAt: now,
+        };
+        setData((d) => ({
+          cheques: d.cheques.some((c) => c.id === chequeId)
+            ? d.cheques.map((c) => (c.id === chequeId ? cheque : c))
+            : [cheque, ...d.cheques],
+          reminders: [
+            reminder,
+            ...d.reminders.filter((r) => r.id !== reminder.id),
+          ],
+        }));
+      } else {
+        setData((d) => ({
+          cheques: d.cheques.some((c) => c.id === chequeId)
+            ? d.cheques.map((c) => (c.id === chequeId ? cheque : c))
+            : [cheque, ...d.cheques],
+          reminders: d.reminders.filter((r) => r.chequeId !== chequeId),
+        }));
+      }
 
       return { ok: true, cheque };
     },
-    [data.cheques, invoiceStore, applyEffect]
+    [data.cheques, invoiceStore, applyEffect, settings.cheque]
   );
 
   const changeStatus = useCallback(
