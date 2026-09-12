@@ -27,6 +27,7 @@ import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { ListItem } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { useInventoryStore } from "@/inventory/store";
+import { useInvoiceStore } from "@/invoices/store";
 import {
   computeStockTotals,
   getStockStatus,
@@ -46,6 +47,7 @@ export function ProductDetailPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const store = useInventoryStore();
+  const invoiceStore = useInvoiceStore();
   const { products, categories, movements } = store;
 
   const item = products.find((p) => p.id === id);
@@ -109,6 +111,16 @@ export function ProductDetailPage() {
 
   const status = isProduct ? getStockStatus(item) : null;
   const category = categories.find((c) => c.id === item.categoryId);
+
+  /* فاکتورهایی که به این قلم ارجاع دارند — برای حفاظت از حذف */
+  const referencedInvoices = useMemo(
+    () =>
+      invoiceStore.invoices.filter((inv) =>
+        inv.items.some((it) => it.productId === item.id)
+      ),
+    [invoiceStore.invoices, item.id]
+  );
+  const hasInvoiceHistory = referencedInvoices.length > 0;
 
   const doDelete = () => {
     store.deleteProduct(item.id);
@@ -390,25 +402,55 @@ export function ProductDetailPage() {
       <Modal
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title={`حذف ${TYPE_LABEL[item.type]}؟`}
-        description={`«${item.name}» به‌طور کامل حذف می‌شود. این عمل قابل بازگشت نیست.`}
+        title={hasInvoiceHistory ? `حذف ${TYPE_LABEL[item.type]} مجاز نیست` : `حذف ${TYPE_LABEL[item.type]}؟`}
+        description={
+          hasInvoiceHistory
+            ? "این قلم در فاکتورهای ثبت‌شده استفاده شده و برای حفظ تاریخچهٔ فاکتورها حذف نمی‌شود."
+            : `«${item.name}» به‌طور کامل حذف می‌شود. این عمل قابل بازگشت نیست.`
+        }
         footer={
-          <>
-            <Button variant="destructive" onClick={doDelete}>
-              حذف {TYPE_LABEL[item.type]}
-            </Button>
-            <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
-              انصراف
-            </Button>
-          </>
+          hasInvoiceHistory ? (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDeleteOpen(false);
+                  navigate(`/invoices/invoice/${referencedInvoices[0].id}`);
+                }}
+              >
+                مشاهدهٔ فاکتورها
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                بستن
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="destructive" onClick={doDelete}>
+                حذف {TYPE_LABEL[item.type]}
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                انصراف
+              </Button>
+            </>
+          )
         }
       >
-        {isProduct && (itemMovements.length > 0 || (item.currentStock ?? 0) > 0) && (
+        {hasInvoiceHistory ? (
           <Alert
             variant="warning"
-            title="این کالا تاریخچهٔ انبار دارد"
-            description={`${faNum(itemMovements.length)} حرکت ورود/خروج به همراه موجودی فعلی حذف می‌شود. در فازهای آینده برای حفظ سوابق، بایگانی جداگانه در نظر گرفته خواهد شد.`}
+            title="قلم دارای سابقهٔ فاکتور حذف نمی‌شود"
+            description={`${faNum(referencedInvoices.length)} فاکتور به این قلم ارجاع دارد. فاکتورها نام و قیمت را در لحظهٔ ثبت ذخیره می‌کنند؛ برای پنهان‌کردن این قلم از فهرست، می‌توانید آن را ویرایش و «نمایش در لیست قیمت» را غیرفعال کنید.`}
           />
+        ) : (
+          isProduct &&
+          (itemMovements.length > 0 || (item.currentStock ?? 0) > 0) && (
+            <Alert
+              variant="warning"
+              title="این کالا تاریخچهٔ انبار دارد"
+              description={`${faNum(itemMovements.length)} حرکت ورود/خروج به همراه موجودی فعلی حذف می‌شود. در فازهای آینده برای حفظ سوابق، بایگانی جداگانه در نظر گرفته خواهد شد.`}
+            />
+          )
         )}
       </Modal>
     </>
