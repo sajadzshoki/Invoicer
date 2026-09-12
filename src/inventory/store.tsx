@@ -44,8 +44,8 @@ function loadInitial(): InventoryData {
       if (Array.isArray(parsed.products) && Array.isArray(parsed.movements)) {
         return {
           products: parsed.products,
-          movements: parsed.movements,
           categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+          movements: parsed.movements,
         };
       }
     }
