@@ -42,6 +42,8 @@ import {
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { useToast } from "@/components/ui/Toast";
 import { useBookStore } from "@/book/store";
+import { useInvoiceStore } from "@/invoices/store";
+import { useChequeStore } from "@/cheques/store";
 import { computePartySummary } from "@/book/finance";
 import type { BookAccountTransaction, PartyNote, PartyReminder } from "@/book/types";
 import { PartyStatusBadge } from "@/components/party/PartyStatusBadge";
@@ -68,6 +70,8 @@ export function PartyDetailPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const store = useBookStore();
+  const invoiceStore = useInvoiceStore();
+  const chequeStore = useChequeStore();
   const { persons, transactions, notes, reminders } = store;
 
   const person = persons.find((p) => p.id === id);
@@ -106,6 +110,20 @@ export function PartyDetailPage() {
         .sort((a, b) => b.date.localeCompare(a.date)),
     [transactions, id]
   );
+
+  /* ارجاع‌های مالی طرف حساب — برای حفاظت از حذف */
+  const personInvoices = useMemo(
+    () => invoiceStore.invoices.filter((inv) => inv.personId === id),
+    [invoiceStore.invoices, id]
+  );
+  const personCheques = useMemo(
+    () => chequeStore.cheques.filter((c) => c.personId === id),
+    [chequeStore.cheques, id]
+  );
+  /* طرف حساب با هر اثر مالی (تراکنش، فاکتور یا چک) حذف نمی‌شود تا هیچ
+     رکوردی بی‌سرپرست نماند؛ حذف فقط برای حساب‌های بدون تاریخچه مجاز است. */
+  const hasFinancialHistory =
+    personTxs.length > 0 || personInvoices.length > 0 || personCheques.length > 0;
   const summary = useMemo(() => computePartySummary(personTxs), [personTxs]);
   const personNotes = useMemo(
     () =>
@@ -626,24 +644,45 @@ export function PartyDetailPage() {
       <Modal
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title="حذف طرف حساب؟"
-        description={`«${person.name}» به‌طور کامل از فهرست طرف حساب‌ها حذف می‌شود. این عمل قابل بازگشت نیست.`}
+        title={hasFinancialHistory ? "حذف این طرف حساب مجاز نیست" : "حذف طرف حساب؟"}
+        description={
+          hasFinancialHistory
+            ? "این طرف حساب تاریخچهٔ مالی دارد و برای حفظ یکپارچگی حساب‌ها حذف نمی‌شود."
+            : `«${person.name}» به‌طور کامل از فهرست طرف حساب‌ها حذف می‌شود. این عمل قابل بازگشت نیست.`
+        }
         footer={
-          <>
-            <Button variant="destructive" onClick={doDeleteParty}>
-              حذف طرف حساب
-            </Button>
-            <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
-              انصراف
-            </Button>
-          </>
+          hasFinancialHistory ? (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDeleteOpen(false);
+                  navigate(`/reports/party/${person.id}`);
+                }}
+              >
+                مشاهدهٔ صورت‌حساب
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                بستن
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="destructive" onClick={doDeleteParty}>
+                حذف طرف حساب
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                انصراف
+              </Button>
+            </>
+          )
         }
       >
-        {personTxs.length > 0 && (
+        {hasFinancialHistory && (
           <Alert
             variant="warning"
-            title="این طرف حساب تاریخچهٔ مالی دارد"
-            description={`${faNum(personTxs.length)} تراکنش ثبت‌شده همراه با او حذف می‌شود. در نسخه‌های آینده برای چنین حساب‌هایی بایگانی جداگانه در نظر گرفته خواهد شد.`}
+            title="حساب دارای سابقه حذف نمی‌شود"
+            description={`${faNum(personTxs.length)} تراکنش، ${faNum(personInvoices.length)} فاکتور و ${faNum(personCheques.length)} چک به این طرف حساب متصل است. حذف این موارد باعث ازبین‌رفتن ردپای مالی می‌شود؛ اگر نیازی به این حساب ندارید، می‌توانید قبل از پاک‌سازی کامل از «پشتیبان‌گیری» در تنظیمات استفاده کنید.`}
           />
         )}
       </Modal>
