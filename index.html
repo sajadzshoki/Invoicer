@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f6f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d1311" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="نسق — حسابداری ساده، سریع و شفاف برای کسب‌وکارهای کوچک" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>نسق — حسابداری کسب‌وکار</title>
+    <script>
+      // جلوگیری از فلش تم اشتباه قبل از رندر اولیه
+      (function () {
+        try {
+          var stored = localStorage.getItem("nasagh:theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

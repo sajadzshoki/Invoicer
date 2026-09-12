@@ -1,0 +1,263 @@
+/* ============================================================================
+   ماژول چک‌ها — فاز ۵
+   کلاس‌های اختصاصی فهرست و جزئیات چک + پیوست مشترک چک/هزینه
+============================================================================ */
+
+/* ------------------------------ خلاصهٔ چک‌ها ------------------------------ */
+
+.ch-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+@media (min-width: 720px) {
+  .ch-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.ch-summary__tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.ch-summary__tile strong {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+
+.ch-summary__tile > span:last-child {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.ch-summary__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+}
+
+.ch-summary__tile--success strong {
+  color: var(--fin-income-text);
+}
+
+.ch-summary__tile--warning strong {
+  color: var(--color-warning-text);
+}
+
+.ch-summary__tile--error strong {
+  color: var(--fin-expense-text);
+}
+
+/* ------------------------------ نمای کلی مبلغ ------------------------------ */
+
+.ch-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.ch-hero__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ch-hero__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+
+.ch-hero__amount {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text-1);
+}
+
+.ch-hero__note {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+
+/* ------------------------------ نشانهٔ سررسید ------------------------------ */
+
+.ch-due--overdue {
+  color: var(--color-error-text) !important;
+  font-weight: 600;
+}
+
+.ch-due--soon {
+  color: var(--color-warning-text) !important;
+  font-weight: 600;
+}
+
+/* ------------------------------ یادآور محلی ------------------------------ */
+
+.ch-reminder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-soft);
+  border: 1px solid var(--color-border);
+}
+
+.ch-reminder__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-warning-text);
+}
+
+.ch-reminder__desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+}
+
+.ch-reminder__note {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+/* ------------------------------ پیوست (مشترک چک/هزینه) ------------------------------ */
+
+.attachment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.attachment__preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+
+.attachment__thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.attachment__file-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-3);
+  color: var(--color-text-2);
+  flex-shrink: 0;
+}
+
+.attachment__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.attachment__name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment__caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.attachment__actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.attachment__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.attachment__empty:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.attachment__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+/* ------------------------------ ردیف انتخاب در فرم ------------------------------ */
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-1);
+  font-size: var(--text-sm);
+  text-align: right;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.picker-trigger:hover {
+  border-color: var(--color-border-strong);
+}
+
+.picker-trigger.is-error {
+  border-color: var(--color-error);
+}
+
+.picker-trigger__placeholder {
+  color: var(--color-text-3);
+}

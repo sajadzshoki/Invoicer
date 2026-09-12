@@ -1,0 +1,356 @@
+/**
+ * استایل ماژول تنظیمات (فاز ۷)
+ * چیدمان دسکتاپ: ناوبری کناری + پنل محتوا با پهنای خوانا
+ * موبایل: فهرست گروه‌ها در صفحهٔ اصلی؛ فرم‌ها تمام‌عرض با ذخیرهٔ چسبان
+ */
+
+/* ------------------------------ چیدمان ------------------------------ */
+
+.settings-layout {
+  display: block;
+}
+
+.settings-nav {
+  display: none;
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .settings-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 720px);
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: sticky;
+    top: var(--space-4);
+  }
+  .settings-nav__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-2);
+    font: inherit;
+    font-size: var(--text-sm);
+    text-align: start;
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+  .settings-nav__item:hover {
+    background: var(--color-surface-2);
+  }
+  .settings-nav__item.is-active {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-text);
+    font-weight: var(--weight-bold);
+  }
+  .settings-nav__item:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* ------------------------------ فرم‌ها ------------------------------ */
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.settings-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: var(--weight-heavy);
+}
+
+.settings-card--danger {
+  border-color: var(--color-error);
+}
+
+.settings-caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  line-height: var(--leading-relaxed);
+}
+
+.settings-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.settings-fieldset legend {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-2);
+  padding-inline: var(--space-2);
+}
+
+.settings-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.settings-preview {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.settings-preview strong {
+  color: var(--color-primary-text);
+}
+
+.settings-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.settings-row-inline {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.settings-row-inline .grow {
+  flex: 1;
+}
+
+.settings-add-btn {
+  flex-shrink: 0;
+  margin-bottom: 1px;
+}
+
+/* ------------------------------ دسته‌بندی‌ها ------------------------------ */
+
+.settings-cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-cat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.settings-cat-row:last-child {
+  border-bottom: none;
+}
+
+.settings-cat-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settings-cat-row__name {
+  font-weight: var(--weight-bold);
+}
+
+.settings-cat-row__usage {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.settings-cat-row__actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* ------------------------------ نوار ذخیره ------------------------------ */
+
+.save-bar {
+  position: sticky;
+  bottom: calc(var(--bottomnav-height) + env(safe-area-inset-bottom) + var(--space-2));
+  z-index: 30;
+}
+
+.save-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  padding: var(--space-3) var(--space-4);
+}
+
+.save-bar__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+@media (min-width: 900px) {
+  .save-bar {
+    bottom: var(--space-4);
+  }
+}
+
+/* ------------------------------ برگهٔ خروج ------------------------------ */
+
+.sheet-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-4);
+}
+
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-2);
+}
+
+/* ------------------------------ پشتیبان‌گیری ------------------------------ */
+
+.visually-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.backup-summary p {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  margin-bottom: var(--space-2);
+}
+
+.backup-summary ul {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.backup-summary li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dashed var(--color-border);
+  font-size: var(--text-sm);
+}
+
+.settings-danger-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ------------------------------ درباره ------------------------------ */
+
+.about-card {
+  align-items: center;
+  text-align: center;
+}
+
+.about-card__name {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-heavy);
+}
+
+.about-card__desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: var(--leading-relaxed);
+  max-width: 48ch;
+}
+
+.about-card__meta {
+  display: flex;
+  gap: var(--space-6);
+  margin: 0;
+}
+
+.about-card__meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-card__meta dt {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+}
+
+.about-card__meta dd {
+  margin: 0;
+  font-weight: var(--weight-bold);
+}
+
+.about-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.about-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  line-height: var(--leading-relaxed);
+}
+
+.settings-check {
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 2px var(--space-3);
+}
+
+.list-item--muted {
+  opacity: 0.55;
+}
