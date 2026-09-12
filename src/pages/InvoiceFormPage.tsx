@@ -211,6 +211,15 @@ export function InvoiceFormPage() {
   const isDraft = type === "DRAFT";
   const isSell = type === "SELL";
 
+  /* فاکتور چکی‌دار در حال ویرایش: تا زمانی که چک متصل است، نوع فاکتور و
+     نوع تسویه قفل می‌ماند تا اثر مالی چک‌ها با تغییر نوع بازنویسی/دو بار
+     اعمال نشود. */
+  const editingHasCheques =
+    isEdit &&
+    editing?.paymentType === "CHEQUE" &&
+    !!editId &&
+    chequeStore.invoiceCheques(editId).length > 0;
+
   /* ---------- بازگردانی فرم پس از بازگشت از ساخت طرف حساب ---------- */
   useEffect(() => {
     let snapshot: FormSnapshot | null = null;
@@ -568,19 +577,25 @@ export function InvoiceFormPage() {
                   { id: "BUY", label: "خرید", icon: <Package size={18} aria-hidden /> },
                   { id: "DRAFT", label: "پیش‌فاکتور", icon: <FileText size={18} aria-hidden /> },
                 ] as Array<{ id: InvoiceType; label: string; icon: React.ReactNode }>
-              ).map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={type === option.id}
-                  className={cn("inv-type-switch__option", type === option.id && "is-active")}
-                  onClick={() => setType(option.id)}
-                >
-                  {option.icon}
-                  {option.label}
-                </button>
-              ))}
+              ).map((option) => {
+                const locked = editingHasCheques && option.id !== type;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={type === option.id}
+                    aria-disabled={locked || undefined}
+                    className={cn("inv-type-switch__option", type === option.id && "is-active")}
+                    onClick={() => {
+                      if (!locked) setType(option.id);
+                    }}
+                  >
+                    {option.icon}
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
 
             {isDraft && (
@@ -916,6 +931,14 @@ export function InvoiceFormPage() {
                 <div className="section-head">
                   <h2>نوع تسویه</h2>
                 </div>
+                {editingHasCheques && (
+                  <Alert
+                    variant="info"
+                    title="نوع تسویهٔ این فاکتور قفل است"
+                    description="این فاکتور چک ثبت‌شده دارد؛ برای تغییر نوع تسویه ابتدا چک‌ها را حذف کنید تا اثر مالی آن‌ها از بین نرود."
+                    className="mb-3"
+                  />
+                )}
                 <div className="settlement-grid" role="radiogroup" aria-label="نوع تسویه">
                   {(
                     [
@@ -937,22 +960,28 @@ export function InvoiceFormPage() {
                         settings.payments[option.id] ||
                         (isEdit && editing?.paymentType === option.id)
                     )
-                    .map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={payment === option.id}
-                      className={cn(
-                        "settlement-option",
-                        payment === option.id && "is-active"
-                      )}
-                      onClick={() => setPayment(option.id)}
-                    >
-                      {option.icon}
-                      {option.label}
-                    </button>
-                  ))}
+                    .map((option) => {
+                    const locked = editingHasCheques && option.id !== "CHEQUE";
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={payment === option.id}
+                        aria-disabled={locked || undefined}
+                        className={cn(
+                          "settlement-option",
+                          payment === option.id && "is-active"
+                        )}
+                        onClick={() => {
+                          if (!locked) setPayment(option.id);
+                        }}
+                      >
+                        {option.icon}
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {payment === "CASH" && (
