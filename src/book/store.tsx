@@ -45,13 +45,15 @@ function loadInitial(): BookData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as BookData;
-      if (
-        Array.isArray(parsed.persons) &&
-        Array.isArray(parsed.transactions) &&
-        Array.isArray(parsed.notes) &&
-        Array.isArray(parsed.reminders)
-      ) {
-        return parsed;
+      // آرایه‌های اصلی معتبر باشند کافی است؛ زیرمجموعه‌های اختیاریِ گم‌شده
+      // با آرایهٔ خالی پر می‌شوند تا دادهٔ معتبر هرگز دور ریخته نشود.
+      if (Array.isArray(parsed.persons) && Array.isArray(parsed.transactions)) {
+        return {
+          persons: parsed.persons,
+          transactions: parsed.transactions,
+          notes: Array.isArray(parsed.notes) ? parsed.notes : [],
+          reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
+        };
       }
     }
   } catch {

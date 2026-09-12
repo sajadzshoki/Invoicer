@@ -59,8 +59,12 @@ function loadInitial(): ChequeData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as ChequeData;
-      if (Array.isArray(parsed.cheques) && Array.isArray(parsed.reminders)) {
-        return parsed;
+      // یادآورهای گم‌شده خالی فرض می‌شوند تا چک‌های معتبر دور ریخته نشوند.
+      if (Array.isArray(parsed.cheques)) {
+        return {
+          cheques: parsed.cheques,
+          reminders: Array.isArray(parsed.reminders) ? parsed.reminders : [],
+        };
       }
     }
   } catch {

@@ -159,6 +159,8 @@ export function validateBackup(parsed: unknown): BackupValidation {
     if (!isObject(stores.book)) return fail("دادهٔ دفتر حساب (طرف حساب‌ها) نامعتبر است.");
     if (!isArrayOfObjects(stores.book.persons)) return fail("فهرست طرف حساب‌ها نامعتبر است.");
     if (!isArrayOfObjects(stores.book.transactions)) return fail("فهرست تراکنش‌های دفتر حساب نامعتبر است.");
+    if (stores.book.notes !== undefined && !isArrayOfObjects(stores.book.notes)) return fail("فهرست یادداشت‌های طرف حساب نامعتبر است.");
+    if (stores.book.reminders !== undefined && !isArrayOfObjects(stores.book.reminders)) return fail("فهرست یادآورهای طرف حساب نامعتبر است.");
   }
 
   // انبار
@@ -166,6 +168,7 @@ export function validateBackup(parsed: unknown): BackupValidation {
     if (!isObject(stores.inventory)) return fail("دادهٔ انبار نامعتبر است.");
     if (!isArrayOfObjects(stores.inventory.products)) return fail("فهرست کالاها نامعتبر است.");
     if (!isArrayOfObjects(stores.inventory.movements)) return fail("فهرست حرکات انبار نامعتبر است.");
+    if (stores.inventory.categories !== undefined && !isArrayOfObjects(stores.inventory.categories)) return fail("فهرست دسته‌های کالا نامعتبر است.");
   }
 
   // فاکتورها
@@ -187,12 +190,14 @@ export function validateBackup(parsed: unknown): BackupValidation {
         return fail("یک چک در پشتیبان فیلدهای ضروری (شناسه/مبلغ) ندارد.");
       }
     }
+    if (stores.cheques.reminders !== undefined && !isArrayOfObjects(stores.cheques.reminders)) return fail("فهرست یادآورهای چک نامعتبر است.");
   }
 
   // هزینه‌ها
   if (stores.costs !== undefined) {
     if (!isObject(stores.costs)) return fail("دادهٔ هزینه‌ها نامعتبر است.");
     if (!isArrayOfObjects(stores.costs.costs)) return fail("فهرست هزینه‌ها و درآمدها نامعتبر است.");
+    if (stores.costs.categories !== undefined && !isArrayOfObjects(stores.costs.categories)) return fail("فهرست دسته‌های هزینه/درآمد نامعتبر است.");
   }
 
   const summary: BackupSummary = {
@@ -217,12 +222,50 @@ export function parseBackupText(text: string): BackupValidation {
 /* ------------------------------ بازیابی ------------------------------ */
 
 /**
+ * کامل‌کردن مخازن پشتیبان: اگر مخزنی یا یکی از آرایه‌های داخلی آن در فایل
+ * نبود، با «شکل خالی» پر می‌شود — نه حذف کلید. حذف کلید باعث می‌شد استور در
+ * بارگذاری بعدی به دادهٔ نمونه برگردد که با مفهوم بازیابی «همه یا هیچ»
+ * سازگار نیست.
+ */
+function completeStores(stores: BackupFile["stores"]): BackupFile["stores"] {
+  const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+  const book = isObject(stores.book) ? stores.book : {};
+  const inventory = isObject(stores.inventory) ? stores.inventory : {};
+  const cheques = isObject(stores.cheques) ? stores.cheques : {};
+  const costs = isObject(stores.costs) ? stores.costs : {};
+  return {
+    book: {
+      persons: arr(book.persons),
+      transactions: arr(book.transactions),
+      notes: arr(book.notes),
+      reminders: arr(book.reminders),
+    },
+    inventory: {
+      products: arr(inventory.products),
+      categories: arr(inventory.categories),
+      movements: arr(inventory.movements),
+    },
+    invoices: arr(stores.invoices),
+    cheques: {
+      cheques: arr(cheques.cheques),
+      reminders: arr(cheques.reminders),
+    },
+    costs: {
+      costs: arr(costs.costs),
+      categories: arr(costs.categories),
+    },
+    settings: stores.settings,
+    theme: stores.theme,
+  };
+}
+
+/**
  * جایگزینی کامل مخازن با دادهٔ اعتبارسنجی‌شده و ریلود برنامه.
  * فقط بعد از اعتبارسنجی کامل فراخوانی شود — نوشتن همهٔ کلیدها پشت‌سرهم
  * و سپس ریلود، رفتار تراکنشی (همه یا هیچ) را تضمین می‌کند.
  */
 export function restoreBackup(file: BackupFile): void {
-  const stores = file.stores;
+  const stores = completeStores(file.stores);
   const write = (key: string, value: unknown) => {
     if (value === undefined) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(value));

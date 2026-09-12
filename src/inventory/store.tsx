@@ -40,12 +40,13 @@ function loadInitial(): InventoryData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as InventoryData;
-      if (
-        Array.isArray(parsed.products) &&
-        Array.isArray(parsed.categories) &&
-        Array.isArray(parsed.movements)
-      ) {
-        return parsed;
+      // دادهٔ معتبر هرگز دور ریخته نمی‌شود؛ دسته‌های گم‌شده خالی فرض می‌شوند.
+      if (Array.isArray(parsed.products) && Array.isArray(parsed.movements)) {
+        return {
+          products: parsed.products,
+          movements: parsed.movements,
+          categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+        };
       }
     }
   } catch {

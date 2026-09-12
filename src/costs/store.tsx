@@ -38,8 +38,12 @@ function loadInitial(): CostData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as CostData;
-      if (Array.isArray(parsed.costs) && Array.isArray(parsed.categories)) {
-        return parsed;
+      // دسته‌های گم‌شده خالی فرض می‌شوند تا رکوردهای معتبر دور ریخته نشوند.
+      if (Array.isArray(parsed.costs)) {
+        return {
+          costs: parsed.costs,
+          categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+        };
       }
     }
   } catch {
