@@ -527,24 +527,53 @@ export function InvoiceDetailPage() {
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         title="حذف فاکتور؟"
-        description={`فاکتور ${faInvoiceNumber(invoice.invoiceNumber)} حذف می‌شود و این عمل قابل بازگشت نیست.`}
+        description={
+          invoiceCheques.length > 0
+            ? "این فاکتور به چک متصل است و تا حذف‌نشدن چک‌ها نمی‌توان آن را حذف کرد."
+            : `فاکتور ${faInvoiceNumber(invoice.invoiceNumber)} حذف می‌شود و این عمل قابل بازگشت نیست.`
+        }
         footer={
-          <>
-            <Button variant="destructive" onClick={doDelete}>
-              حذف فاکتور
-            </Button>
-            <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
-              انصراف
-            </Button>
-          </>
+          invoiceCheques.length > 0 ? (
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setDeleteOpen(false);
+                  navigate(`/cheque/${invoiceCheques[0].id}`);
+                }}
+              >
+                مشاهدهٔ چک‌ها
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                انصراف
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="destructive" onClick={doDelete}>
+                حذف فاکتور
+              </Button>
+              <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
+                انصراف
+              </Button>
+            </>
+          )
         }
       >
-        {invoice.type !== "DRAFT" && (
+        {invoiceCheques.length > 0 ? (
           <Alert
             variant="warning"
-            title="اثر فاکتور نیز بازگشت داده می‌شود"
-            description="حرکت‌های انباری و رکوردهای مالی متصل به این فاکتور حذف می‌شوند تا موجودی و ماندهٔ طرف حساب درست باقی بماند."
+            title="حذف فاکتور دارای چک مجاز نیست"
+            description={`${faNum(invoiceCheques.length)} چک به این فاکتور متصل است. برای حذف فاکتور، ابتدا چک‌های آن را از صفحهٔ چک‌ها حذف کنید تا اثر مالی‌شان بازنویسی نشود.`}
           />
+        ) : (
+          invoice.type !== "DRAFT" && (
+            <Alert
+              variant="warning"
+              title="اثر فاکتور نیز بازگشت داده می‌شود"
+              description="حرکت‌های انباری و رکوردهای مالی متصل به این فاکتور حذف می‌شوند تا موجودی و ماندهٔ طرف حساب درست باقی بماند."
+            />
+          )
         )}
       </Modal>
     </>

@@ -186,7 +186,12 @@ export function BookProvider({ children }: { children: ReactNode }) {
   const removeTransactionsForInvoice = useCallback((invoiceId: string) => {
     setData((d) => ({
       ...d,
-      transactions: d.transactions.filter((t) => t.invoiceId !== invoiceId),
+      // رکوردهای ساخته‌شده توسط چک‌ها (تگ chequeId) به خود چک تعلق دارند و
+      // چرخهٔ زندگی‌شان با ذخیره/تغییر وضعیت چک مدیریت می‌شود؛ پس هنگام
+      // ویرایش/حذف فاکتور حذف نمی‌شوند تا اثر مالی چک‌ها گم نشود.
+      transactions: d.transactions.filter(
+        (t) => t.invoiceId !== invoiceId || t.chequeId !== undefined
+      ),
     }));
   }, []);
 

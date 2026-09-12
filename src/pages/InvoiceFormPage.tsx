@@ -36,6 +36,7 @@ import {
 } from "@/components/invoice/ItemPickerSheet";
 import { InvoiceTotals } from "@/components/invoice/InvoiceTotals";
 import { GENERAL_CUSTOMER_NAME, useInvoiceStore } from "@/invoices/store";
+import { useChequeStore } from "@/cheques/store";
 import { useBookStore } from "@/book/store";
 import { useInventoryStore } from "@/inventory/store";
 import { useSettings } from "@/settings/store";
@@ -124,6 +125,7 @@ export function InvoiceFormPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const invoiceStore = useInvoiceStore();
+  const chequeStore = useChequeStore();
   const { persons } = useBookStore();
   const inventory = useInventoryStore();
   const { settings } = useSettings();
