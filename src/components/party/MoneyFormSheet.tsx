@@ -83,10 +83,7 @@ export function MoneyFormSheet({
 
     setSubmitting(true);
     try {
-      await Promise.all([
-        onSubmit({ amount: value, date, description: desc.trim() || undefined }),
-        new Promise((r) => setTimeout(r, 550)),
-      ]);
+      await onSubmit({ amount: value, date, description: desc.trim() || undefined });
       showToast({
         variant: "success",
         title: isReceived ? "دریافت ثبت شد" : "پرداخت ثبت شد",

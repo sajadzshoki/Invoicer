@@ -3,7 +3,6 @@ import { Clock, Package, SearchX, Wrench } from "lucide-react";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { SearchInput, Select } from "@/components/ui/Field";
 import { ListItem } from "@/components/ui/Card";
-import { Skeleton } from "@/components/ui/Feedback";
 import { useInventoryStore } from "@/inventory/store";
 import { useInvoiceStore } from "@/invoices/store";
 import type { InvoiceType } from "@/invoices/types";
@@ -40,16 +39,12 @@ export function ItemPickerSheet({
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<PickerTypeFilter>("all");
   const [categoryId, setCategoryId] = useState("");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
     setQuery("");
     setTypeFilter("all");
     setCategoryId("");
-    const t = window.setTimeout(() => setLoading(false), 500);
-    return () => window.clearTimeout(t);
   }, [open]);
 
   /** قلم‌هایی که در فاکتورهای اخیر استفاده شده‌اند */
@@ -183,19 +178,7 @@ export function ItemPickerSheet({
       </div>
 
       <div className="mt-4">
-        {loading ? (
-          <div className="stack" aria-hidden>
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <Skeleton width={56} height={56} />
-                <div style={{ flex: 1 }}>
-                  <Skeleton width="50%" height={14} />
-                  <Skeleton width="35%" height={11} className="mt-2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="picker-empty">
             <SearchX size={26} aria-hidden />
             <p>

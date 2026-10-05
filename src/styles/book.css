@@ -54,7 +54,7 @@
 
 .party-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
 }
 @media (min-width: 720px) {
@@ -68,6 +68,8 @@
   align-items: center;
   gap: var(--space-3);
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   text-align: start;
   padding: var(--space-4);
   background: var(--color-surface);
@@ -108,6 +110,9 @@
   font-size: var(--text-base);
   font-weight: var(--weight-bold);
   color: var(--color-text-1);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .party-card__meta {
   font-size: var(--text-xs);
@@ -355,6 +360,22 @@
 }
 .t-item + .t-item {
   border-top: 1px solid var(--color-border);
+}
+button.t-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+button.t-item:hover {
+  background: var(--color-surface-2);
+}
+button.t-item:focus-visible {
+  outline: var(--ring-width) solid var(--color-focus);
+  outline-offset: -2px;
 }
 .t-item__icon {
   width: 38px;

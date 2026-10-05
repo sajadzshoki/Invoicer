@@ -79,17 +79,15 @@ export function StockMovementSheet({
     if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
-    window.setTimeout(() => {
-      onSubmit({ quantity: value, date, description: desc.trim() || undefined });
-      showToast({
-        variant: "success",
-        title: isEntry ? "ورود کالا ثبت شد" : "خروج کالا ثبت شد",
-        description: `${faNum(value)} ${unit ?? ""} ${
-          isEntry ? `به موجودی «${productName}» اضافه شد.` : `از موجودی «${productName}» کم شد.`
-        }`,
-      });
-      close();
-    }, 500);
+    onSubmit({ quantity: value, date, description: desc.trim() || undefined });
+    showToast({
+      variant: "success",
+      title: isEntry ? "ورود کالا ثبت شد" : "خروج کالا ثبت شد",
+      description: `${faNum(value)} ${unit ?? ""} ${
+        isEntry ? `به موجودی «${productName}» اضافه شد.` : `از موجودی «${productName}» کم شد.`
+      }`,
+    });
+    close();
   };
 
   return (

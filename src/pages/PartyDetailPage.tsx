@@ -33,12 +33,7 @@ import {
   Textarea,
   useFieldId,
 } from "@/components/ui/Field";
-import {
-  Alert,
-  EmptyState,
-  ErrorState,
-  Skeleton,
-} from "@/components/ui/Feedback";
+import { Alert, EmptyState, ErrorState } from "@/components/ui/Feedback";
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { useToast } from "@/components/ui/Toast";
 import { useBookStore } from "@/book/store";
@@ -50,7 +45,7 @@ import { PartyStatusBadge } from "@/components/party/PartyStatusBadge";
 import { MoneyFormSheet, type MoneyKind } from "@/components/party/MoneyFormSheet";
 import { DateSelectSheet } from "@/components/party/DateSelectSheet";
 import { TimeSelectSheet, formatTimeFa } from "@/components/party/TimeSelectSheet";
-import { faNum, initialsOfName } from "@/lib/fa";
+import { currencyUnitLabel, faMoney, faNum, initialsOfName } from "@/lib/fa";
 import { formatPhoneDisplay } from "@/lib/phone";
 import { faDateLong, relativeFaDate, todayIso } from "@/lib/jalali";
 import { cn } from "@/lib/cn";
@@ -75,12 +70,6 @@ export function PartyDetailPage() {
   const { persons, transactions, notes, reminders } = store;
 
   const person = persons.find((p) => p.id === id);
-
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 600);
-    return () => window.clearTimeout(t);
-  }, [id]);
 
   /* ------------------------- پنل‌ها و فرم‌ها ------------------------- */
   const [money, setMoney] = useState<{ open: boolean; kind: MoneyKind }>({
@@ -184,18 +173,6 @@ export function PartyDetailPage() {
 
   const hasHistoryFilters = tab !== "all" || histQuery.trim() !== "" || range !== "all";
   const hasAnyEntry = personTxs.length > 0 || personNotes.length > 0;
-
-  /* ------------------------- حالت‌های خطا/بارگذاری ------------------------- */
-  if (loading) {
-    return (
-      <>
-        <PageHeader title="…" onBack />
-        <div className="page">
-          <DetailSkeleton />
-        </div>
-      </>
-    );
-  }
 
   if (!person) {
     return (
@@ -316,8 +293,8 @@ export function PartyDetailPage() {
           <div className="balance-hero">
             <span className="balance-hero__label">ماندهٔ حساب</span>
             <p className="balance-hero__amount">
-              {faNum(Math.abs(summary.balance))}
-              <span className="amount-unit">تومان</span>
+              {faMoney(Math.abs(summary.balance))}
+              <span className="amount-unit">{currencyUnitLabel()}</span>
             </p>
             <div className="balance-hero__status">
               {summary.status === "settled" ? (
@@ -333,16 +310,17 @@ export function PartyDetailPage() {
           <div className="fin-tiles">
             <FinTile label="طلب از او" value={summary.receivable} tone="info" />
             <FinTile label="بدهی به او" value={summary.payable} tone="warning" />
-            <FinTile label="مجموع فروش" value={summary.totalSales} tone="success" future />
-            <FinTile label="مجموع خرید" value={summary.totalPurchases} tone="neutral" future />
+            <FinTile label="مجموع فروش" value={summary.totalSales} tone="success" />
+            <FinTile label="مجموع خرید" value={summary.totalPurchases} tone="neutral" />
             <FinTile
               label="سود معامله"
               value={summary.profit}
               tone={summary.profit >= 0 ? "success" : "error"}
-              future
             />
           </div>
-          <p className="fin-note">مجموع خرید، فروش و سود با فعال‌شدن فاکتورها در فاز بعد کامل می‌شوند.</p>
+          <p className="fin-note">
+            فروش و خرید از رکوردهای دفتر حساب همین طرف حساب است. فاکتور نقدی در لحظه تسویه می‌شود و روی این جمع اثر نمی‌گذارد.
+          </p>
         </section>
 
         {/* اقدامات اصلی */}
@@ -370,13 +348,7 @@ export function PartyDetailPage() {
               block
               variant="ghost"
               icon={<FileSignature size={20} aria-hidden />}
-              onClick={() =>
-                showToast({
-                  variant: "info",
-                  title: "این بخش در فاز بعدی فعال می‌شود",
-                  description: "صدور فاکتور در فاز بعدی نسق اضافه خواهد شد.",
-                })
-              }
+              onClick={() => navigate(`/invoices/add?partyId=${encodeURIComponent(person.id)}`)}
             >
               ثبت فاکتور
             </Button>
@@ -480,7 +452,7 @@ export function PartyDetailPage() {
               <EmptyState
                 icon={<HandCoins size={30} aria-hidden />}
                 title="هنوز تراکنشی ثبت نشده"
-                description="با ثبت اولین دریافت یا پرداخت، تاریخچهٔ حساب این طرف حساب ساخته می‌شود."
+                description="با ثبت دریافت، پرداخت یا فاکتور، تاریخچهٔ حساب این طرف حساب ساخته می‌شود."
                 actions={
                   <Button
                     icon={<ArrowDownToLine size={18} aria-hidden />}
@@ -516,7 +488,17 @@ export function PartyDetailPage() {
             <div className="timeline">
               {historyEntries.map((entry) =>
                 entry.kind === "tx" ? (
-                  <TransactionRow key={entry.tx.id} tx={entry.tx} />
+                  <TransactionRow
+                    key={entry.tx.id}
+                    tx={entry.tx}
+                    onOpen={
+                      entry.tx.chequeId
+                        ? () => navigate(`/cheque/${entry.tx.chequeId}`)
+                        : entry.tx.invoiceId
+                          ? () => navigate(`/invoices/invoice/${entry.tx.invoiceId}`)
+                          : undefined
+                    }
+                  />
                 ) : (
                   <NoteRow
                     key={entry.note.id}
@@ -761,28 +743,31 @@ function FinTile({
   label,
   value,
   tone,
-  future,
 }: {
   label: string;
   value: number;
   tone: "info" | "warning" | "success" | "error" | "neutral";
-  future?: boolean;
 }) {
   return (
     <div className={`fin-tile fin-tile--${tone}`}>
       <span className="fin-tile__label">{label}</span>
-      <span className="fin-tile__value">{faNum(Math.abs(value))}</span>
-      <span className="fin-tile__unit">تومان</span>
-      {future && value === 0 && <Badge tone="outline" className="fin-tile__badge">فاز بعد</Badge>}
+      <span className="fin-tile__value">{faMoney(Math.abs(value))}</span>
+      <span className="fin-tile__unit">{currencyUnitLabel()}</span>
     </div>
   );
 }
 
-function TransactionRow({ tx }: { tx: BookAccountTransaction }) {
+function TransactionRow({
+  tx,
+  onOpen,
+}: {
+  tx: BookAccountTransaction;
+  onOpen?: () => void;
+}) {
   const meta = txVisual(tx.type);
   const sign = tx.type === "RECEIVED" || tx.type === "PURCHASE_INVOICE" ? "−" : "+";
-  return (
-    <div className="t-item">
+  const body = (
+    <>
       <span className={`t-item__icon t-item__icon--${meta.tone}`} aria-hidden>
         {meta.icon}
       </span>
@@ -793,14 +778,17 @@ function TransactionRow({ tx }: { tx: BookAccountTransaction }) {
       </div>
       <div className="t-item__amount">
         <span className={`t-item__value t-item__value--${meta.tone}`}>
-          {sign} {faNum(tx.amount)}
+          {sign} {faMoney(tx.amount)}
         </span>
-        <span className="t-item__unit">تومان</span>
-        {tx.type === "SALE_INVOICE" || tx.type === "PURCHASE_INVOICE" || tx.type === "CHEQUE" ? (
-          <Badge tone="outline" className="mt-2">فاز بعد</Badge>
-        ) : null}
+        <span className="t-item__unit">{currencyUnitLabel()}</span>
       </div>
-    </div>
+    </>
+  );
+  if (!onOpen) return <div className="t-item">{body}</div>;
+  return (
+    <button type="button" className="t-item t-item--link" onClick={onOpen}>
+      {body}
+    </button>
   );
 }
 
@@ -1061,37 +1049,5 @@ function ReminderSheet({
         }}
       />
     </>
-  );
-}
-
-/* اسکلت صفحهٔ جزئیات */
-function DetailSkeleton() {
-  return (
-    <div role="status" aria-label="در حال بارگذاری حساب">
-      <div className="party-profile" aria-hidden>
-        <Skeleton circle width={56} height={56} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-          <Skeleton width="40%" height={16} />
-          <Skeleton width="60%" height={12} />
-        </div>
-      </div>
-      <div className="balance-hero mt-6" aria-hidden>
-        <Skeleton width={90} height={12} />
-        <Skeleton width="70%" height={30} className="mt-2" />
-        <Skeleton width={140} height={12} className="mt-2" />
-      </div>
-      <div className="fin-tiles mt-4" aria-hidden>
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="fin-tile">
-            <Skeleton width="60%" height={11} />
-            <Skeleton width="80%" height={16} />
-          </div>
-        ))}
-      </div>
-      <div className="stack mt-6" aria-hidden>
-        <Skeleton height={52} width="100%" />
-        <Skeleton height={52} width="100%" />
-      </div>
-    </div>
   );
 }

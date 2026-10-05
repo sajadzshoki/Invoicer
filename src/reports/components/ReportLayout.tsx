@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Printer, FileDown } from "lucide-react";
 import { PageHeader } from "@/app/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -129,13 +129,7 @@ export interface ReportResult<T> {
  * محاسبهٔ گزارش با اسکلت کوتاه و مدیریت خطا — بدون کرش کردن اپ
  */
 export function useReport<T>(compute: () => T, deps: unknown[]): ReportResult<T> {
-  const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 500);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const { data, error } = useMemo(() => {
     try {
@@ -148,7 +142,7 @@ export function useReport<T>(compute: () => T, deps: unknown[]): ReportResult<T>
   }, [...deps, attempt]);
 
   return {
-    loading,
+    loading: false,
     data,
     error,
     retry: () => setAttempt((a) => a + 1),

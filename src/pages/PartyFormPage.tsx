@@ -126,11 +126,10 @@ export function PartyFormPage() {
       birthDate,
     };
 
-    // مسیر بازگشت اختیاری — مثلاً ادامهٔ جریان صدور فاکتور (فاز ۴)
+    // مسیر بازگشت اختیاری — مثلاً ادامهٔ جریان صدور فاکتور
     const returnTo = searchParams.get("returnTo");
 
-    // شبیه‌سازی کوتاهِ ذخیره‌سازی
-    window.setTimeout(() => {
+    {
       if (isEdit && editingParty) {
         updateParty(editingParty.id, input);
         showToast({
@@ -158,7 +157,7 @@ export function PartyFormPage() {
           navigate(`/bookAccount/${person.id}`);
         }
       }
-    }, 600);
+    }
   };
 
   const cancel = () => {

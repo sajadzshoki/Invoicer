@@ -3,7 +3,7 @@ import { FileSpreadsheet, User } from "lucide-react";
 import { Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
-import { faNum, faToman } from "@/lib/fa";
+import { faToman } from "@/lib/fa";
 import { faDateLong } from "@/lib/jalali";
 import { useReportData } from "@/reports/selectors/dataSource";
 import { getPartyStatement } from "@/reports/selectors/receivables";
@@ -224,7 +224,7 @@ export function PartyStatementPage() {
                       header: "مانده",
                       align: "end",
                       render: (row) => (
-                        <strong>{faNum(row.runningBalance)} تومان</strong>
+                        <strong>{faToman(row.runningBalance)}</strong>
                       ),
                     },
                   ]}

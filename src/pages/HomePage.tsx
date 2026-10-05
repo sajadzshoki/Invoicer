@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowDownLeft,
@@ -18,8 +18,9 @@ import {
 import { PageHeader } from "@/app/PageHeader";
 import { Avatar, ListItem } from "@/components/ui/Card";
 import { IconButton, Button } from "@/components/ui/Button";
-import { EmptyState, SkeletonListItem } from "@/components/ui/Feedback";
-import { useToast } from "@/components/ui/Toast";
+import { EmptyState } from "@/components/ui/Feedback";
+import { BottomSheet } from "@/components/ui/Overlay";
+import { useBookStore } from "@/book/store";
 import { useChequeStore } from "@/cheques/store";
 import { computeChequeSummary } from "@/cheques/helpers";
 import { useCostStore } from "@/costs/store";
@@ -34,7 +35,7 @@ import {
   faTomanCompact,
   faTodayFull,
 } from "@/lib/fa";
-import { todayIso } from "@/lib/jalali";
+import { faDateLong, todayIso } from "@/lib/jalali";
 
 /** نام نمایشی کاربر از پروفایل کسب‌وکار (تنظیمات) گرفته می‌شود */
 
@@ -47,23 +48,17 @@ const QUICK_ACTIONS: Array<{ id: string; label: string; icon: ReactNode }> = [
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const { costs } = useCostStore();
+  const book = useBookStore();
   const chequeStore = useChequeStore();
   const reportData = useReportData();
   const { settings } = useSettings();
-  const [loadingActivity, setLoadingActivity] = useState(true);
+  const [noticesOpen, setNoticesOpen] = useState(false);
 
   /* خوش‌آمدگویی با پروفایل کسب‌وکار — بدون نام ساختگی */
   const business = settings.business;
   const welcomeName = (business.ownerName || business.name).trim();
   const businessTitle = business.name.trim() || "نسق";
-
-  // شبیه‌سازی بارگذاری اولیه — نمایش اسکلت
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoadingActivity(false), 900);
-    return () => window.clearTimeout(t);
-  }, []);
 
   /* خلاصهٔ ماه جاری — از سلکتور مشترک گزارش‌ها (بدون منطق تکراری) */
   const monthSummary = useMemo(
@@ -86,6 +81,27 @@ export function HomePage() {
     [costs]
   );
 
+  const notices = useMemo(() => {
+    const partyItems = book.reminders.map((reminder) => {
+      const person = book.persons.find((p) => p.id === reminder.personId);
+      return {
+        id: `party-${reminder.id}`,
+        date: reminder.date,
+        title: reminder.title,
+        caption: `${person?.name ?? "طرف حساب"} · ${faDateLong(reminder.date)}`,
+        to: `/bookAccount/${reminder.personId}`,
+      };
+    });
+    const chequeItems = chequeStore.reminders.map((reminder) => ({
+      id: `cheque-${reminder.id}`,
+      date: reminder.date,
+      title: reminder.title,
+      caption: `${reminder.description ?? "سررسید چک"} · ${faDateLong(reminder.date)}`,
+      to: `/cheque/${reminder.chequeId}`,
+    }));
+    return [...partyItems, ...chequeItems].sort((a, b) => a.date.localeCompare(b.date));
+  }, [book.reminders, book.persons, chequeStore.reminders]);
+
   const runQuickAction = (id: string) => {
     if (id === "invoice") navigate("/invoices/add");
     else if (id === "cheque") navigate("/cheque/add");
@@ -101,14 +117,9 @@ export function HomePage() {
         actions={
           <>
             <IconButton
-              label="اعلان‌ها"
+              label={notices.length > 0 ? `یادآورها، ${faNum(notices.length)} مورد` : "یادآورها"}
               tone="filled"
-              onClick={() =>
-                showToast({
-                  title: "اعلان‌ها به‌زودی فعال می‌شوند",
-                  variant: "info",
-                })
-              }
+              onClick={() => setNoticesOpen(true)}
             >
               <Bell size={20} aria-hidden />
             </IconButton>
@@ -280,13 +291,7 @@ export function HomePage() {
             </Button>
           </div>
           <div className="card" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
-            {loadingActivity ? (
-              <div role="status" aria-label="در حال بارگذاری تراکنش‌ها">
-                <SkeletonListItem />
-                <SkeletonListItem />
-                <SkeletonListItem />
-              </div>
-            ) : recentCosts.length === 0 ? (
+            {recentCosts.length === 0 ? (
               <EmptyState
                 compact
                 icon={<Inbox size={30} aria-hidden />}
@@ -331,6 +336,32 @@ export function HomePage() {
           </div>
         </section>
       </div>
+
+      <BottomSheet open={noticesOpen} onClose={() => setNoticesOpen(false)} title="یادآورها">
+        {notices.length === 0 ? (
+          <EmptyState
+            compact
+            icon={<Bell size={28} aria-hidden />}
+            title="یادآوری فعالی نیست"
+            description="یادآورهای طرف حساب و سررسید چک‌ها اینجا نمایش داده می‌شوند. پوش نوتیفیکیشن در این نسخه وجود ندارد."
+          />
+        ) : (
+          <div className="list">
+            {notices.map((item) => (
+              <ListItem
+                key={item.id}
+                title={item.title}
+                caption={item.caption}
+                chevron
+                onClick={() => {
+                  setNoticesOpen(false);
+                  navigate(item.to);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </BottomSheet>
     </>
   );
 }

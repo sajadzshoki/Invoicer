@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Copy,
@@ -15,7 +15,7 @@ import {
 import { PageHeader } from "@/app/PageHeader";
 import { Badge, ListItem, StatusBadge } from "@/components/ui/Card";
 import { Button, IconButton } from "@/components/ui/Button";
-import { Alert, ErrorState, Skeleton } from "@/components/ui/Feedback";
+import { Alert, ErrorState } from "@/components/ui/Feedback";
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { useToast } from "@/components/ui/Toast";
 import { useInvoiceStore } from "@/invoices/store";
@@ -32,7 +32,7 @@ import {
   PAYMENT_TYPE_LABEL,
   SHIPPING_LABEL,
 } from "@/invoices/helpers";
-import { faNum, faToman, toFaDigits } from "@/lib/fa";
+import { faMoney, faNum, faToman, toFaDigits } from "@/lib/fa";
 import { faDateLong } from "@/lib/jalali";
 import { cn } from "@/lib/cn";
 
@@ -53,12 +53,6 @@ export function InvoiceDetailPage() {
     ? chequeStore.invoiceCheques(invoice.id)
     : [];
 
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 600);
-    return () => window.clearTimeout(t);
-  }, [id]);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -73,17 +67,6 @@ export function InvoiceDetailPage() {
       extraCostsTotal: invoice.extraCosts.reduce((s, ec) => s + ec.amount, 0),
     });
   }, [invoice]);
-
-  if (loading) {
-    return (
-      <>
-        <PageHeader title="…" onBack />
-        <div className="page">
-          <DetailSkeleton />
-        </div>
-      </>
-    );
-  }
 
   if (!invoice || !totals) {
     return (
@@ -337,9 +320,9 @@ export function InvoiceDetailPage() {
                     {faNum(item.quantity)}
                     {item.unit ? ` ${item.unit}` : ""}
                   </span>
-                  <span>{faNum(item.unitPrice)}</span>
-                  <span>{item.discount > 0 ? faNum(item.discount) : "—"}</span>
-                  <span className="inv-items__total">{faNum(item.total)}</span>
+                  <span>{faMoney(item.unitPrice)}</span>
+                  <span>{item.discount > 0 ? faMoney(item.discount) : "—"}</span>
+                  <span className="inv-items__total">{faMoney(item.total)}</span>
                 </div>
               ))}
             </div>
@@ -353,13 +336,13 @@ export function InvoiceDetailPage() {
               {totals.itemsDiscount > 0 && (
                 <div className="inv-totals__row inv-totals__row--minus">
                   <span>تخفیف اقلام</span>
-                  <span>− {faNum(totals.itemsDiscount)} تومان</span>
+                  <span>− {faToman(totals.itemsDiscount)}</span>
                 </div>
               )}
               {totals.discount > 0 && (
                 <div className="inv-totals__row inv-totals__row--minus">
                   <span>تخفیف کل فاکتور</span>
-                  <span>− {faNum(totals.discount)} تومان</span>
+                  <span>− {faToman(totals.discount)}</span>
                 </div>
               )}
               {(totals.totalDiscount > 0 || invoice.taxEnabled) && (
@@ -577,18 +560,5 @@ export function InvoiceDetailPage() {
         )}
       </Modal>
     </>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <div role="status" aria-label="در حال بارگذاری فاکتور">
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <Skeleton width={130} height={18} />
-        <Skeleton width={80} height={18} />
-      </div>
-      <Skeleton height={300} width="100%" className="mt-4" />
-      <Skeleton height={120} width="100%" className="mt-4" />
-    </div>
   );
 }

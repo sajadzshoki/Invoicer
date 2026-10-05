@@ -5,7 +5,6 @@ import { BottomSheet } from "@/components/ui/Overlay";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Field";
 import { Avatar, ListItem, StatusBadge } from "@/components/ui/Card";
-import { Skeleton } from "@/components/ui/Feedback";
 import { useBookStore } from "@/book/store";
 import { computePartySummary, STATUS_LABEL } from "@/book/finance";
 import type { Person } from "@/book/types";
@@ -36,14 +35,10 @@ export function PartyPickerSheet({
   const location = useLocation();
   const { persons, transactions } = useBookStore();
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
     setQuery("");
-    const t = window.setTimeout(() => setLoading(false), 500);
-    return () => window.clearTimeout(t);
   }, [open]);
 
   const filtered = useMemo(() => {
@@ -77,19 +72,7 @@ export function PartyPickerSheet({
       />
 
       <div className="mt-4">
-        {loading ? (
-          <div className="stack" aria-hidden>
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <Skeleton circle width={44} height={44} />
-                <div style={{ flex: 1 }}>
-                  <Skeleton width="40%" height={14} />
-                  <Skeleton width="60%" height={11} className="mt-2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="picker-empty">
             <SearchX size={26} aria-hidden />
             <p>طرف حسابی پیدا نشد.</p>

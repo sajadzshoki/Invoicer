@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
 import { Badge, ListItem, StatusBadge } from "@/components/ui/Card";
 import { DatePickerTrigger, SearchInput } from "@/components/ui/Field";
-import { EmptyState, Skeleton } from "@/components/ui/Feedback";
+import { EmptyState } from "@/components/ui/Feedback";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { DateSelectSheet } from "@/components/party/DateSelectSheet";
 import { useInvoiceStore } from "@/invoices/store";
@@ -107,12 +107,6 @@ export function InvoicesPage() {
     inv.paymentType === "CHEQUE"
       ? Math.max(0, inv.totalAmount - chequeStore.settledByCheques(inv.id))
       : outstandingAmount(inv);
-
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 600);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const [tab, setTab] = useState<TypeFilter>("all");
   const [query, setQuery] = useState("");
@@ -327,9 +321,7 @@ export function InvoicesPage() {
         )}
 
         {/* محتوا */}
-        {loading ? (
-          <ListSkeleton />
-        ) : counts[tab] === 0 ? (
+        {counts[tab] === 0 ? (
           <div
             className="card mt-4"
             style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}
@@ -566,23 +558,5 @@ function InvoiceCard({
         )}
       </div>
     </button>
-  );
-}
-
-function ListSkeleton() {
-  return (
-    <div className="inv-grid mt-4" role="status" aria-label="در حال بارگذاری فاکتورها">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="card">
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Skeleton width={90} height={14} />
-            <Skeleton width={70} height={14} />
-          </div>
-          <Skeleton width="45%" height={16} className="mt-3" />
-          <Skeleton width="60%" height={12} className="mt-2" />
-          <Skeleton width="35%" height={18} className="mt-3" />
-        </div>
-      ))}
-    </div>
   );
 }

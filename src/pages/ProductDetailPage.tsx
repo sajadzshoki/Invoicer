@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowDownToLine,
@@ -21,7 +21,6 @@ import {
   Alert,
   EmptyState,
   ErrorState,
-  Skeleton,
 } from "@/components/ui/Feedback";
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { ListItem } from "@/components/ui/Card";
@@ -53,12 +52,6 @@ export function ProductDetailPage() {
   const item = products.find((p) => p.id === id);
   const isProduct = item?.type === "PRODUCT";
 
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 600);
-    return () => window.clearTimeout(t);
-  }, [id]);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [movement, setMovement] = useState<{ open: boolean; kind: "ENTRY" | "EXIT" }>({
@@ -82,17 +75,6 @@ export function ProductDetailPage() {
         : itemMovements.filter((m) => m.type === movementTab),
     [itemMovements, movementTab]
   );
-
-  if (loading) {
-    return (
-      <>
-        <PageHeader title="…" onBack />
-        <div className="page">
-          <DetailSkeleton />
-        </div>
-      </>
-    );
-  }
 
   if (!item) {
     return (
@@ -493,26 +475,6 @@ function MovementRow({ movement }: { movement: StockMovement }) {
           {isEntry ? "+" : "−"} {faNum(movement.quantity)}
         </span>
         <span className="t-item__unit">{movement.unit ?? ""}</span>
-      </div>
-    </div>
-  );
-}
-
-function DetailSkeleton() {
-  return (
-    <div role="status" aria-label="در حال بارگذاری جزئیات">
-      <div className="party-profile" aria-hidden>
-        <Skeleton width={72} height={72} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-          <Skeleton width="45%" height={16} />
-          <Skeleton width="65%" height={12} />
-        </div>
-      </div>
-      <Skeleton width={110} height={16} className="mt-6" />
-      <Skeleton height={180} width="100%" className="mt-2" />
-      <div className="stack mt-6" aria-hidden>
-        <Skeleton height={52} width="100%" />
-        <Skeleton height={52} width="100%" />
       </div>
     </div>
   );

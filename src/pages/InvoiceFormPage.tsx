@@ -51,7 +51,7 @@ import {
   faInvoiceNumber,
   INVOICE_TYPE_LABEL,
 } from "@/invoices/helpers";
-import { faNum, parseAmountDigits, toEnDigits } from "@/lib/fa";
+import { faNum, faToman, parseAmountDigits, toEnDigits } from "@/lib/fa";
 import { faDateLong, todayIso } from "@/lib/jalali";
 import { cn } from "@/lib/cn";
 
@@ -146,7 +146,12 @@ export function InvoiceFormPage() {
   );
   const [date, setDate] = useState(editing?.date ?? todayIso());
   const [time, setTime] = useState(editing?.time ?? nowHHMM());
-  const [partyId, setPartyId] = useState<string | undefined>(editing?.personId);
+  const [partyId, setPartyId] = useState<string | undefined>(() => {
+    if (editing?.personId) return editing.personId;
+    const requested = searchParams.get("partyId");
+    if (requested && persons.some((p) => p.id === requested)) return requested;
+    return undefined;
+  });
   const [lines, setLines] = useState<EditableLine[]>(
     () =>
       editing?.items.map((it) => ({
@@ -264,8 +269,13 @@ export function InvoiceFormPage() {
       /* دسترسی نبود */
     }
 
-    // در حالت ساخت، انتخاب پیش‌فرض «مشتری عمومی» است
+    // در حالت ساخت، طرف حسابِ خواسته‌شده از مسیر (مثلاً صفحهٔ طرف حساب) یا «مشتری عمومی»
     if (!snapshot && !isEdit) {
+      const requested = searchParams.get("partyId");
+      if (requested && persons.some((p) => p.id === requested)) {
+        setPartyId(requested);
+        return;
+      }
       const general = persons.find((p) => p.name === GENERAL_CUSTOMER_NAME);
       if (general) setPartyId(general.id);
     }
@@ -515,7 +525,7 @@ export function InvoiceFormPage() {
       customerContact,
     };
 
-    window.setTimeout(() => {
+    {
       const result = invoiceStore.saveInvoice(input, editId);
       if (!result.ok) {
         setSubmitting(false);
@@ -537,14 +547,14 @@ export function InvoiceFormPage() {
             : inv.type === "SELL"
               ? "فاکتور فروش ثبت شد"
               : "فاکتور خرید ثبت شد",
-        description: `فاکتور ${faInvoiceNumber(inv.invoiceNumber)} با مبلغ ${faNum(inv.totalAmount)} تومان`,
+        description: `فاکتور ${faInvoiceNumber(inv.invoiceNumber)} با مبلغ ${faToman(inv.totalAmount)}`,
       });
       if (!isEdit && inv.type !== "DRAFT" && inv.paymentType === "CHEQUE") {
         navigate(`/cheque/add/${inv.id}`);
       } else {
         navigate(`/invoices/invoice/${inv.id}`);
       }
-    }, 600);
+    }
   };
 
   const cancel = () => {
@@ -796,7 +806,7 @@ export function InvoiceFormPage() {
                             <span />
                           )}
                           <span className="inv-line__total">
-                            جمع: {faNum(lineTotal)} تومان
+                            جمع: {faToman(lineTotal)}
                           </span>
                         </div>
                       </div>
@@ -996,7 +1006,7 @@ export function InvoiceFormPage() {
                   <Alert
                     variant="info"
                     title={isSell ? "کل مبلغ به‌عنوان طلب ثبت می‌شود" : "کل مبلغ به‌عنوان بدهی ثبت می‌شود"}
-                    description={`ماندهٔ حساب طرف حساب به اندازهٔ ${faNum(totals.totalAmount)} تومان ${isSell ? "بدهکار" : "بستانکار"} می‌شود.`}
+                    description={`ماندهٔ حساب طرف حساب به اندازهٔ ${faToman(totals.totalAmount)} ${isSell ? "بدهکار" : "بستانکار"} می‌شود.`}
                     className="mt-3"
                   />
                 )}
@@ -1018,7 +1028,7 @@ export function InvoiceFormPage() {
                       </Field>
                       <div className="paid-remaining">
                         <span>باقی‌مانده</span>
-                        <strong>{faNum(installmentRemaining)} تومان</strong>
+                        <strong>{faToman(installmentRemaining)}</strong>
                         <small>فقط باقی‌مانده روی ماندهٔ حساب اثر می‌گذارد.</small>
                       </div>
                     </div>
@@ -1136,7 +1146,7 @@ export function InvoiceFormPage() {
         <div className="sticky-footer__inner sticky-footer__inner--split">
           <div className="sticky-total">
             <span>مبلغ کل</span>
-            <strong>{faNum(totals.totalAmount)} تومان</strong>
+            <strong>{faToman(totals.totalAmount)}</strong>
           </div>
           <div className="sticky-total__actions">
             <Button size="lg" loading={submitting} onClick={submit}>

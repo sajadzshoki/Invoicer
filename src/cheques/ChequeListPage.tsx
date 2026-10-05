@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Ban,
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
 import { Badge, ListItem, StatusBadge } from "@/components/ui/Card";
 import { DatePickerTrigger, SearchInput } from "@/components/ui/Field";
-import { EmptyState, Skeleton } from "@/components/ui/Feedback";
+import { EmptyState } from "@/components/ui/Feedback";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { DateSelectSheet } from "@/components/party/DateSelectSheet";
 import { useChequeStore } from "@/cheques/store";
@@ -90,12 +90,6 @@ export function ChequeListPage() {
   const navigate = useNavigate();
   const { cheques } = useChequeStore();
   const { persons } = useBookStore();
-
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 600);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const [tab, setTab] = useState<TypeTab>("all");
   const [query, setQuery] = useState("");
@@ -294,17 +288,7 @@ export function ChequeListPage() {
           </div>
         )}
 
-        {loading ? (
-          <div className="inv-grid mt-4" role="status" aria-label="در حال بارگذاری چک‌ها">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="card">
-                <Skeleton width="40%" height={16} />
-                <Skeleton width="60%" height={12} className="mt-3" />
-                <Skeleton width="35%" height={18} className="mt-3" />
-              </div>
-            ))}
-          </div>
-        ) : counts[tab] === 0 ? (
+        {counts[tab] === 0 ? (
           <div className="card mt-4" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
             <EmptyState
               icon={<FileSignature size={32} aria-hidden />}

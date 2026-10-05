@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BellRing,
@@ -11,7 +11,7 @@ import {
 import { PageHeader } from "@/app/PageHeader";
 import { Badge, StatusBadge } from "@/components/ui/Card";
 import { Button, IconButton } from "@/components/ui/Button";
-import { Alert, ErrorState, Skeleton } from "@/components/ui/Feedback";
+import { Alert, ErrorState } from "@/components/ui/Feedback";
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { ListItem } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
@@ -48,12 +48,6 @@ export function ChequeDetailPage() {
     ? chequeStore.reminders.find((r) => r.id === cheque.reminderId)
     : undefined;
 
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 600);
-    return () => window.clearTimeout(t);
-  }, [id]);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [statusSheetOpen, setStatusSheetOpen] = useState(false);
   const [pendingTarget, setPendingTarget] = useState<ChequeStatus | null>(null);
@@ -63,20 +57,6 @@ export function ChequeDetailPage() {
     () => (cheque ? allowedTransitions(cheque.status) : []),
     [cheque]
   );
-
-  if (loading) {
-    return (
-      <>
-        <PageHeader title="…" onBack />
-        <div className="page">
-          <div role="status" aria-label="در حال بارگذاری چک">
-            <Skeleton height={120} width="100%" />
-            <Skeleton height={220} width="100%" className="mt-4" />
-          </div>
-        </div>
-      </>
-    );
-  }
 
   if (!cheque) {
     return (

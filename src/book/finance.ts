@@ -13,8 +13,8 @@ import type {
  *
  * پول گرفتم (دریافت از شخص) مانده را کم می‌کند و
  * پول دادم (پرداخت به شخص) مانده را زیاد می‌کند.
- * فاکتور فروش مانده را زیاد و فاکتور خرید مانده را کم می‌کند؛
- * چک در این فاز اثر مالی ندارد و فقط نمایشی است.
+ * فاکتور فروش مانده را زیاد و فاکتور خرید مانده را کم می‌کند.
+ * نوع CHEQUE اثر مستقیم ندارد؛ اثر چک فقط از رکوردهای تگ‌دار chequeId می‌آید.
  */
 
 export function transactionEffect(t: BookAccountTransaction): number {
@@ -28,7 +28,7 @@ export function transactionEffect(t: BookAccountTransaction): number {
     case "PURCHASE_INVOICE":
       return -t.amount;
     case "CHEQUE":
-      // منطق چک در فاز چک‌ها پیاده می‌شود
+      // اثر مالی چک از رکوردهای SALE/PURCHASE و RECEIVED/PAID با تگ chequeId می‌آید
       return 0;
   }
 }

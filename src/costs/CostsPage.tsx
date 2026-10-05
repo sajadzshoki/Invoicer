@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowDownLeft,
@@ -17,7 +17,7 @@ import {
   DatePickerTrigger,
   SearchInput,
 } from "@/components/ui/Field";
-import { EmptyState, Skeleton } from "@/components/ui/Feedback";
+import { EmptyState } from "@/components/ui/Feedback";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { DateSelectSheet } from "@/components/party/DateSelectSheet";
 import { ActivityChart } from "@/components/cost/ActivityChart";
@@ -50,12 +50,6 @@ const DEFAULT_FILTERS: CostFilters = { range: "none", categoryId: "all" };
 export function CostsPage() {
   const navigate = useNavigate();
   const { costs, categories, getCategory } = useCostStore();
-
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 500);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const [tab, setTab] = useState<TypeTab>("all");
   const [query, setQuery] = useState("");
@@ -269,16 +263,7 @@ export function CostsPage() {
           </div>
         )}
 
-        {loading ? (
-          <div className="list mt-4" role="status" aria-label="در حال بارگذاری">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} style={{ padding: "12px 4px" }}>
-                <Skeleton width="45%" height={15} />
-                <Skeleton width="30%" height={12} className="mt-2" />
-              </div>
-            ))}
-          </div>
-        ) : costs.length === 0 ? (
+        {costs.length === 0 ? (
           <div className="card mt-4" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
             <EmptyState
               icon={<PiggyBank size={32} aria-hidden />}

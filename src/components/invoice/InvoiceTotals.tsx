@@ -28,14 +28,14 @@ export function InvoiceTotals({
       {totals.itemsDiscount > 0 && (
         <div className="inv-totals__row inv-totals__row--minus">
           <span>تخفیف اقلام</span>
-          <span>− {faNum(totals.itemsDiscount)} تومان</span>
+          <span>− {faToman(totals.itemsDiscount)}</span>
         </div>
       )}
 
       {totals.discount > 0 && (
         <div className="inv-totals__row inv-totals__row--minus">
           <span>تخفیف کل فاکتور</span>
-          <span>− {faNum(totals.discount)} تومان</span>
+          <span>− {faToman(totals.discount)}</span>
         </div>
       )}
 

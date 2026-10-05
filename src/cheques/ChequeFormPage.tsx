@@ -25,7 +25,7 @@ import { useSettings } from "@/settings/store";
 import type { ChequeAttachment, ChequeStatus, ChequeType } from "@/cheques/types";
 import { CHEQUE_STATUS_LABEL, CHEQUE_TYPE_LABEL, isValidSayadi } from "@/cheques/helpers";
 import { faInvoiceNumber, outstandingAmount } from "@/invoices/helpers";
-import { faNum, parseAmountDigits } from "@/lib/fa";
+import { faNum, faToman, parseAmountDigits } from "@/lib/fa";
 import { faDateLong, todayIso } from "@/lib/jalali";
 
 interface FormErrors {
@@ -249,7 +249,7 @@ export function ChequeFormPage() {
       personId: isFromInvoice ? invoice?.personId : personId,
     };
 
-    window.setTimeout(() => {
+    {
       const result = chequeStore.saveCheque(input, editId);
       if (!result.ok) {
         setSubmitting(false);
@@ -259,10 +259,10 @@ export function ChequeFormPage() {
       showToast({
         variant: "success",
         title: isEdit ? "تغییرات چک ذخیره شد" : "چک ثبت شد",
-        description: `چک ${CHEQUE_TYPE_LABEL[type]} با مبلغ ${faNum(input.amount)} تومان`,
+        description: `چک ${CHEQUE_TYPE_LABEL[type]} با مبلغ ${faToman(input.amount)}`,
       });
       navigate(`/cheque/${result.cheque.id}`);
-    }, 600);
+    }
   };
 
   return (
@@ -283,7 +283,7 @@ export function ChequeFormPage() {
           <Alert
             variant="info"
             title={`فاکتور ${invoice.type === "SELL" ? "فروش" : "خرید"} ${faInvoiceNumber(invoice.invoiceNumber)}`}
-            description={`طرف حساب: ${invoiceParty?.name ?? "—"} · مبلغ فاکتور: ${faNum(invoice.totalAmount)} تومان · ماندهٔ تسویه: ${faNum(defaultAmount ?? 0)} تومان`}
+            description={`طرف حساب: ${invoiceParty?.name ?? "—"} · مبلغ فاکتور: ${faToman(invoice.totalAmount)} · ماندهٔ تسویه: ${faToman(defaultAmount ?? 0)}`}
           />
         )}
 

@@ -117,14 +117,14 @@ export function CostFormPage() {
       attachment,
     };
 
-    window.setTimeout(() => {
+    {
       const saved = isEdit && editing
         ? store.updateCost(editing.id, input)
         : store.addCost(input);
       setSubmitting(false);
       if (!saved) return;
       navigate(isEdit ? `/costs/${saved.id}` : "/costs", { replace: isEdit });
-    }, 400);
+    }
   };
 
   /* دسترسی مستقیم با شناسهٔ نامعتبر */

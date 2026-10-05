@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { PageHeader } from "@/app/PageHeader";
 import { Badge } from "@/components/ui/Card";
 import { Button, IconButton } from "@/components/ui/Button";
-import { ErrorState, Skeleton } from "@/components/ui/Feedback";
+import { ErrorState } from "@/components/ui/Feedback";
 import { ListItem } from "@/components/ui/Card";
 import { BottomSheet, Modal } from "@/components/ui/Overlay";
 import { useToast } from "@/components/ui/Toast";
@@ -22,29 +22,8 @@ export function CostDetailPage() {
   const cost = id ? store.getCost(id) : undefined;
   const category = cost ? store.getCategory(cost.categoryId) : undefined;
 
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 500);
-    return () => window.clearTimeout(t);
-  }, [id]);
-
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  if (loading) {
-    return (
-      <>
-        <PageHeader title="جزئیات رکورد" onBack />
-        <div className="page">
-          <div className="card">
-            <Skeleton width="50%" height={16} />
-            <Skeleton width="70%" height={13} className="mt-3" />
-            <Skeleton width="35%" height={20} className="mt-3" />
-          </div>
-        </div>
-      </>
-    );
-  }
 
   if (!cost) {
     return (

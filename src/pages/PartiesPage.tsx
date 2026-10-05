@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowDownUp,
@@ -14,7 +14,7 @@ import { PageHeader } from "@/app/PageHeader";
 import { Button, IconButton } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Field";
 import { Avatar, ListItem } from "@/components/ui/Card";
-import { EmptyState, Skeleton } from "@/components/ui/Feedback";
+import { EmptyState } from "@/components/ui/Feedback";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { useBookStore } from "@/book/store";
 import { computePartySummary } from "@/book/finance";
@@ -47,19 +47,12 @@ export function PartiesPage() {
   const navigate = useNavigate();
   const { persons, transactions } = useBookStore();
 
-  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<BalanceFilter>("all");
   const [sort, setSort] = useState<SortKey>("recent");
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [sortSheetOpen, setSortSheetOpen] = useState(false);
   const [contactsOpen, setContactsOpen] = useState(false);
-
-  // شبیه‌سازی دریافت اولیهٔ فهرست
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 800);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const rows = useMemo(() => {
     return persons.map((person) => {
@@ -171,9 +164,7 @@ export function PartiesPage() {
         )}
 
         {/* محتوا */}
-        {loading ? (
-          <PartyListSkeleton />
-        ) : persons.length === 0 ? (
+        {persons.length === 0 ? (
           <div className="card" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
             <EmptyState
               icon={<Users size={32} aria-hidden />}
@@ -346,28 +337,6 @@ function PartyCard({
         </span>
       </div>
     </button>
-  );
-}
-
-/* ------------------------------ اسکلت فهرست ------------------------------ */
-
-function PartyListSkeleton() {
-  return (
-    <div className="party-grid" role="status" aria-label="در حال بارگذاری طرف حساب‌ها">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="party-card party-card--skeleton" aria-hidden>
-          <Skeleton circle width={56} height={56} />
-          <div className="party-card__body">
-            <Skeleton width="45%" height={15} />
-            <Skeleton width="60%" height={11} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
-            <Skeleton width={90} height={15} />
-            <Skeleton width={60} height={11} />
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 

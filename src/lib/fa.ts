@@ -59,9 +59,14 @@ export function currencyUnitLabel(): string {
   return currencyLabel();
 }
 
+/** رقم مبلغ در واحد نمایش (تومان یا ریال) بدون برچسب — برای جدول‌ها */
+export function faMoney(n: number): string {
+  return faNum(toDisplayAmount(n));
+}
+
 /** قالب‌بندی مبلغ با واحد پول انتخابی — مقادیر ورودی همیشه به تومان‌اند */
 export function faToman(n: number): string {
-  return `${faNum(toDisplayAmount(n))} ${currencyLabel()}`;
+  return `${faMoney(n)} ${currencyLabel()}`;
 }
 
 /** نمایش فشردهٔ مبلغ برای داشبورد؛ مثل «۸۶٫۴ میلیون تومان» */

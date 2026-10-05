@@ -233,7 +233,7 @@ export function ProductFormPage() {
           : undefined,
     };
 
-    window.setTimeout(() => {
+    {
       if (isEdit && editingItem) {
         updateProduct(editingItem.id, input);
         showToast({
@@ -255,7 +255,7 @@ export function ProductFormPage() {
         });
         navigate(`/products/${created.id}`);
       }
-    }, 600);
+    }
   };
 
   const cancel = () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowDownUp,
@@ -16,7 +16,7 @@ import { PageHeader } from "@/app/PageHeader";
 import { Button, IconButton } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Field";
 import { Badge } from "@/components/ui/Card";
-import { EmptyState, Skeleton } from "@/components/ui/Feedback";
+import { EmptyState } from "@/components/ui/Feedback";
 import { BottomSheet } from "@/components/ui/Overlay";
 import { Tabs } from "@/components/ui/Tabs";
 import { ListItem } from "@/components/ui/Card";
@@ -32,7 +32,6 @@ import type { Product } from "@/inventory/types";
 import { StockStatusBadge } from "@/components/product/StockStatusBadge";
 import { CategoriesSheet } from "@/components/product/CategoriesSheet";
 import { faNum, faToman, toEnDigits } from "@/lib/fa";
-import { cn } from "@/lib/cn";
 
 type TypeTab = "all" | "PRODUCT" | "SERVICE";
 type StockFilter = "all" | StockStatus;
@@ -56,7 +55,6 @@ export function ProductsPage() {
   const navigate = useNavigate();
   const { products, categories } = useInventoryStore();
 
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TypeTab>("all");
   const [query, setQuery] = useState("");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
@@ -67,11 +65,6 @@ export function ProductsPage() {
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [sortSheetOpen, setSortSheetOpen] = useState(false);
   const [categoriesManageOpen, setCategoriesManageOpen] = useState(false);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoading(false), 800);
-    return () => window.clearTimeout(t);
-  }, []);
 
   const counts = useMemo(
     () => ({
@@ -235,9 +228,7 @@ export function ProductsPage() {
         )}
 
         {/* محتوا */}
-        {loading ? (
-          <ItemGridSkeleton />
-        ) : allEmpty ? (
+        {allEmpty ? (
           <EmptyCard>
             <EmptyState
               icon={<Package size={32} aria-hidden />}
@@ -489,26 +480,6 @@ function EmptyCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="card mt-6" style={{ paddingInline: 0, paddingBlock: "var(--space-2)" }}>
       {children}
-    </div>
-  );
-}
-
-function ItemGridSkeleton() {
-  return (
-    <div className="item-grid mt-4" role="status" aria-label="در حال بارگذاری اقلام">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className={cn("party-card party-card--skeleton")} aria-hidden>
-          <Skeleton width={56} height={56} />
-          <div className="party-card__body">
-            <Skeleton width="50%" height={15} />
-            <Skeleton width="65%" height={11} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Skeleton width={90} height={15} />
-            <Skeleton width={56} height={11} />
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
